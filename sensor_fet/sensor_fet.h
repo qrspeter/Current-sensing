@@ -85,8 +85,68 @@ private:
     const int adc_counts = 131072; // 2^18 если сигнал бипол€рный, 32768 дл€ 16бит, 8192 дл€ 14 бит, и 2048 дл€ 12 бит.
 
 
-    resolution ADC_res  = bit18;
-    gain ADC_amp        = x1;
+//    resolution ADC_res  = bit18;
+    resolution current_res{bit18};
+//    gain ADC_amp        = ;
+    gain current_gain{x1};
+
+    uint8_t status{};
+
+    HANDLE hSerial = INVALID_HANDLE_VALUE;
+
+    const int INPUT_BUFF_SIZE = 16;
+
+    DWORD bc;
+
+
+    // operation codes // change to enum with fixed values, e.g. enum Suit { Diamonds = 5, Hearts, Clubs = 4, Spades };
+    const uint8_t resetSensor   = 0;
+    const uint8_t setDAC_Gate   = 1;
+    const uint8_t setDAC_Drain  = 2;
+    const uint8_t setADC        = 3; // а может и не нужен, если режим задавать в команде опроса ј÷ѕ. ’от€ проще период считать на компе, снима€ отладку с микроконтроллера
+    const uint8_t getADC        = 4;
+
+
+
+    union{
+      uint16_t  voltage;
+      struct{
+        uint8_t volt_0;
+        uint8_t volt_1;
+      };
+    } dac_voltage;
+
+    struct ADC_result
+    {
+        uint8_t meas_2;
+        uint8_t meas_1;
+        uint8_t meas_0;
+        uint8_t meas_status;
+    } adc;
+    /*
+    union{
+      int32_t voltage;
+      struct{
+        uint8_t volt_3;
+        uint8_t volt_2;
+        uint8_t volt_1;
+        uint8_t volt_0;
+      };
+    } adc_voltage;
+
+    uint8_t adc_status;*/
+
+
+    /*
+    struct ADC_result
+    {
+        byte meas_2;
+        byte meas_1;
+        byte meas_0;
+        byte meas_status;
+    } adc;
+    */
+
 
 };
 

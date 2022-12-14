@@ -19,64 +19,6 @@
 
 #include "sensor_fet.h"
 
-HANDLE hSerial = INVALID_HANDLE_VALUE;
-
-resolution current_res;
-gain current_gain;
-uint8_t status;
-
-const int INPUT_BUFF_SIZE = 16;
-
-
-DWORD bc;
-
-union{
-  uint16_t  voltage;
-  struct{
-    uint8_t volt_0;
-    uint8_t volt_1;
-  };
-} dac_voltage;
-
-struct ADC_result
-{
-    uint8_t meas_2;
-    uint8_t meas_1;
-    uint8_t meas_0;
-    uint8_t meas_status;
-} adc;
-/*
-union{
-  int32_t voltage;
-  struct{
-    uint8_t volt_3;
-    uint8_t volt_2;
-    uint8_t volt_1;
-    uint8_t volt_0;
-  };
-} adc_voltage;
-
-uint8_t adc_status;*/
-
-
-/*
-struct ADC_result
-{
-    byte meas_2;
-    byte meas_1;
-    byte meas_0;
-    byte meas_status;
-} adc;
-*/
-
-
-// operation codes // change to enum with fixed values, e.g. enum Suit { Diamonds = 5, Hearts, Clubs = 4, Spades };
-const uint8_t resetSensor   = 0;
-const uint8_t setDAC_Gate   = 1;
-const uint8_t setDAC_Drain  = 2;
-const uint8_t setADC        = 3; // а может и не нужен, если режим задавать в команде опроса АЦП. Хотя проще период считать на компе, снимая отладку с микроконтроллера
-const uint8_t getADC        = 4;
-
 
 SENSOR_FET::SENSOR_FET()
 {
@@ -103,7 +45,7 @@ int SENSOR_FET::Open(int port)
 
     com_port = port;
 
-    com_name[3] = (char)(port + 0x30);
+    com_name[3] = static_cast<char>(port + 0x30);
 
     hSerial = CreateFileA((LPCSTR)com_name, GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
 
@@ -218,7 +160,7 @@ int SENSOR_FET::Reset()
 int SENSOR_FET::Set_voltage(terminal  term, double voltage)
 {
 
-    int16_t dac_count;
+    int16_t dac_count{};
 
     if(hSerial == INVALID_HANDLE_VALUE)
     {
@@ -251,7 +193,7 @@ int SENSOR_FET::Set_voltage(terminal  term, double voltage)
 //     dac_count = (uint16_t) ( ((double) dac_counts) * voltage / (voltage_dd - voltage_ss) ); // это если напряжение от 0 до ~5В
 // а если у нас сперва результат АЦП умножается на два и смещается на напряжение питания вниз, а после умножается на усиление, то надо вычислять в обратном порядке:
 //
-        dac_count = (int16_t) ( ((double) dac_counts) * 0.5 * ((voltage / voltage_gain) + dac_ref) / dac_ref);
+        dac_count = static_cast<int16_t> (static_cast<double> (dac_counts) * 0.5 * ((voltage / voltage_gain) + dac_ref) / dac_ref);
         // нужна проверка на переполнение
         if(dac_count < 0)
             dac_count = 0;
@@ -463,7 +405,7 @@ double SENSOR_FET::Get_voltage()
 
 
 // Без коррекции на смещение нуля, только результат измерения АЦП:
-    double result = adc_ref * (double)raw_adc / (1 * ((double) adc_counts / adc_correction)); // временно без коррекции на усиление ,а может так и понятнее будет....
+    double result = adc_ref * static_cast<double>(raw_adc) / (1 * (static_cast<double> (adc_counts) / adc_correction)); // временно без коррекции на усиление ,а может так и понятнее будет....
 //    double result = adc_ref * ( 0x10000 * adc.meas_2 + 0x100 * adc.meas_1 + adc.meas_0) / (gain_correction * ((double) adc_counts / adc_correction));
 
    return double(result);

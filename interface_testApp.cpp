@@ -22,7 +22,6 @@
 
 IMPLEMENT_APP(interface_testApp);
 
-SENSOR_FET sensor;
 
 bool interface_testApp::OnInit()
 {

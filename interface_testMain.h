@@ -22,7 +22,6 @@
 #include "mathplot/MathPlotConfig.h"
 
 #include "sensor_fet/sensor_fet.h"
-extern SENSOR_FET sensor;
 
 class interface_testFrame: public wxFrame
 {

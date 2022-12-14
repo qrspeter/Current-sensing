@@ -32,6 +32,8 @@
 #include <chrono>
 
 
+SENSOR_FET sensor;
+
 std::vector <double> I_data;
 std::vector <double> V_data;
 std::vector <double> T_data;
@@ -43,11 +45,11 @@ const wxString iv_modes[] = { wxT("Ids(Uds)"), wxT("Ids(Ugs)")};
 const wxString transient_modes[] = { wxT("Adjustment"), wxT("Lagger")};
 
 
-bool measurementStop = FALSE; // Flag
+bool measurementStop{FALSE}; // Flag
 
 //int screen_elements = 300;
 
-int ret_code;
+//int ret_code;
 
 // https://stackoverflow.com/questions/2808398/easily-measure-elapsed-time
 template <
@@ -69,8 +71,8 @@ bool compLess(int a, int b) // for minmax_element
 
 const int sleep_time[4]{ 5, 17, 67, 267 }; // 12bit = 1000/240 = 5, 14bit = 1000/60 = 17, 16bit = 1000/15 = 67, 18bit = 1000/3.75 = 267
 
-const double gate_voltage_max = 40.0; // voltage_max
-const double drain_voltage_max = 12.0; // voltage_min
+const double gate_voltage_max{40.0}; // voltage_max
+const double drain_voltage_max{12.0}; // voltage_min
 
 
 //extern enum terminal { DRAIN, GATE };
@@ -542,7 +544,7 @@ void interface_testFrame::Meas_start(wxCommandEvent &event)
         scanDirection = -1.0;
     }
 
-    int elements = 1 + (int) scanDirection * (stop - start) / (double)step;
+    int elements = 1 + static_cast<int> ( scanDirection * (stop - start) / static_cast<double>(step));
 
 
 //    double edge_x = (stop - start)/50;
@@ -575,8 +577,8 @@ void interface_testFrame::Meas_start(wxCommandEvent &event)
         sensor.Start_ADC(res, static_cast<gain>(sensor_gain  -> GetSelection()));
 
 //        Sleep(sleep_time[sensor_resolution  -> GetSelection()]);
-        if( (sleep_time[sensor_resolution  -> GetSelection()]) < (int)delay_meas -> GetValue()*1000)
-        Sleep((int)delay_meas -> GetValue()*1000);
+        if( (sleep_time[sensor_resolution  -> GetSelection()]) < static_cast<int>(delay_meas -> GetValue()*1000))
+        Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
         else
         Sleep(sleep_time[sensor_resolution  -> GetSelection()]);
 
@@ -584,8 +586,8 @@ void interface_testFrame::Meas_start(wxCommandEvent &event)
 
         V_data.push_back(voltage);
         I_data.push_back(sensor.Get_current()); //  Get_ADC
-        T_data.push_back((double)since(start_time).count()/1000.0);
-
+        T_data.push_back(static_cast<double>(since(start_time).count())/1000.0);
+//        T_data.push_back((double)since(start_time).count()/1000.0);
 
 
         frameworkVector -> SetData(V_data, I_data);
@@ -692,13 +694,13 @@ void interface_testFrame::Transient_start(wxCommandEvent &event)
         resolution res = (resolution) sensor_resolution -> GetSelection();
         sensor.Start_ADC(res, static_cast<gain>(sensor_gain -> GetSelection()));
 
-        if( (sleep_time[sensor_resolution -> GetSelection()]) < (int)delay_meas -> GetValue()*1000)
-        Sleep((int)delay_meas -> GetValue()*1000);
+        if( (sleep_time[sensor_resolution -> GetSelection()]) < static_cast<int>(delay_meas -> GetValue()*1000))
+        Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
         else
         Sleep(sleep_time[sensor_resolution -> GetSelection()]);
 
         I_data.push_back(sensor.Get_current()); //  Get_ADC
-        T_data.push_back((double)since(start_time).count()/1000.0);
+        T_data.push_back(static_cast<double>(since(start_time).count())/1000.0);
         V_data.push_back(trans_gate_start -> GetValue());
 
 
@@ -751,7 +753,7 @@ void interface_testFrame::Transient_start(wxCommandEvent &event)
     }
 */
 
-/* or I will creata a thread then. and how should I create dialogue on stack?
+/* or I will create a thread then. and how should I create dialogue on stack?
 Just create it as wxProgressDialog dlg("Heading", "Message", max) instead of using new to create it on the heap.
 
 */
@@ -788,15 +790,15 @@ Just create it as wxProgressDialog dlg("Heading", "Message", max) instead of usi
                 sensor.Set_voltage(GATE, voltage);
 
         //        Sleep(sleep_time[sensor_resolution  -> GetSelection()]);
-                if( (sleep_time[sensor_resolution  -> GetSelection()]) < (int)delay_meas -> GetValue()*1000)
-                Sleep((int)delay_meas -> GetValue()*1000);
+                if( (sleep_time[sensor_resolution  -> GetSelection()]) < static_cast<int> (delay_meas -> GetValue()*1000))
+                Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
                 else
                 Sleep(sleep_time[sensor_resolution  -> GetSelection()]);
 
 
                 V_data.push_back(voltage);
                 I_data.push_back(sensor.Get_current()); //  Get_ADC
-                T_data.push_back((double)since(start_time).count()/1000.0);
+                T_data.push_back(static_cast<double>(since(start_time).count())/1000.0);
 
 
                 frameworkVector -> SetData(T_data, I_data);
@@ -805,9 +807,9 @@ Just create it as wxProgressDialog dlg("Heading", "Message", max) instead of usi
                 wxYield();
 
             }
-            while((double)since(start_interval).count()/1000.0 < interval);
+            while(static_cast<double>(since(start_interval).count())/1000.0 < interval);
 
-            current_progress = (int) 100.0 * voltage * scanDirection / (stop - start);
+            current_progress = static_cast<int> (100.0 * voltage * scanDirection / (stop - start));
             if ( !ProgressMeas -> Update(current_progress))
             {
                 delete ProgressMeas;
