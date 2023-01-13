@@ -15,7 +15,7 @@
 
 #include <windows.h>
 #include <string>
-#include <cmath> // pow(a, b) = ab
+#include <cmath> // pow(a, b) = ab, std::nan, std::isnan
 
 #include "sensor_fet.h"
 
@@ -89,9 +89,12 @@ int SENSOR_FET::Open(int port)
 
 	COMMTIMEOUTS  ct;
 
-	ct.ReadIntervalTimeout = MAXDWORD ; // 3000;//MAXDWORD;
-	ct.ReadTotalTimeoutMultiplier = MAXDWORD; // 3000;// MAXDWORD;
-	ct.ReadTotalTimeoutConstant = 2000; //2000;//100;
+	ct.ReadIntervalTimeout = 50 ; // 3000;//MAXDWORD;
+	ct.ReadTotalTimeoutMultiplier = 50; //MAXDWORD; // 3000;// MAXDWORD;
+	ct.ReadTotalTimeoutConstant = 300; // 2000; //2000;//100;
+	// was MAXDWORD/MAXDWORD/2000, it means "take bytes what we have, do not wait for the other bytes"
+	// now 50 (max between bytes) / 50 (max 50 for each byte) / 300 (total time is slightly above over 267ms for 18-bit mode)
+
 	ct.WriteTotalTimeoutMultiplier = 0;
 	ct.WriteTotalTimeoutConstant = 0;
 
@@ -121,28 +124,20 @@ int SENSOR_FET::Open(int port)
 
 
 
-
-	// не хватает проверки подключения, заодно бы буфер очистился, а то при первом считывании с АЦП всегда ноль.
-
-/*	uint8_t cleat_port = 0;
-    WriteFile(hSerial, &cleat_port, sizeof(cleat_port), &bc, NULL);
-    WriteFile(hSerial, &cleat_port, sizeof(cleat_port), &bc, NULL);
-    ReadFile(hSerial, &cleat_port, sizeof(cleat_port), &bc, NULL);
-*/
-
 	Reset();
 	Sleep(1000);
 //	Set_ADC(14, 1, 0);
 	Start_ADC(bit14, x1);
 	Sleep(200);
-	Get_voltage();
 
-	if(adc.meas_status != 0b00000100) // для 14 бит.
+	if(std::isnan(Get_voltage()))
     {
-        MessageBox(NULL, "Connection with periphery is failed", "Error", MB_OK);
+        MessageBox(NULL, "Connection with periphery is failed. Check analog power", "Error", MB_OK);
         CloseHandle(hSerial);
 		return(0);
+
     }
+
 
 	return 1;
 
@@ -188,25 +183,13 @@ int SENSOR_FET::Set_voltage(terminal  term, double voltage)
     if(voltage < -voltage_max)
         voltage = -voltage_max;
 
- //   if( (voltage <= voltage_dd) && (voltage >= voltage_ss))
- //   {
-//     dac_count = (uint16_t) ( ((double) dac_counts) * voltage / (voltage_dd - voltage_ss) ); // это если напряжение от 0 до ~5В
-// а если у нас сперва результат АЦП умножается на два и смещается на напряжение питания вниз, а после умножается на усиление, то надо вычислять в обратном порядке:
-//
-        dac_count = static_cast<int16_t> (static_cast<double> (dac_counts) * 0.5 * ((voltage / voltage_gain) + dac_ref) / dac_ref);
-        // нужна проверка на переполнение
-        if(dac_count < 0)
-            dac_count = 0;
+    dac_count = static_cast<int16_t> (static_cast<double> (dac_counts) * 0.5 * ((voltage / voltage_gain) + dac_ref) / dac_ref);
+    // нужна проверка на переполнение
+    if(dac_count < 0)
+        dac_count = 0;
 
-         if(dac_count > dac_counts - 1)
-            dac_count = dac_counts - 1;
-
-
- //       dac_count = (uint16_t) ( ((double) dac_counts) * voltage / (voltage_dd - voltage_ss) );
-
-//    }
-//    else
-//    return(0); // messagebox?
+    if(dac_count > dac_counts - 1)
+        dac_count = dac_counts - 1;
 
 
 
@@ -230,54 +213,6 @@ int SENSOR_FET::Set_voltage(terminal  term, double voltage)
     return 1;
 
 }
-
-/*
-int SENSOR_FET::Set_ADC(int bits, int gain = 1, int channel = 0) // or port number, number or ADC and gain (port, 1-4 and gain)... точно - порт (0-4), разрядность (12-18), усиление (1-8).
-{
-    // разрядность 12-14-16-18 -> вычитаем 12 и делим на 3, получаем 0...3, как надо
-    // усиление 1-2-4-8 -> ...
-    // номер канала - как есть, 0...3
-
-    int8_t bits_channel = channel;
-    int8_t bits_bits = (bits - 12)/2;
-    int8_t bits_gain = 0;
-
-    if(hSerial == INVALID_HANDLE_VALUE)
-    {
-        MessageBox(NULL, "Connection is failed", "Error", MB_OK);
-        return 0; //  // messagebox?
-    }
-
-    switch(gain)
-    {
-        case 1:
-            bits_gain = 0;
-            break;
-        case 2:
-            bits_gain = 1;
-            break;
-        case 4:
-            bits_gain = 2;
-            break;
-        case 8:
-            bits_gain = 3;
-            break;
-        default:
-            break;
-
-    }
-
-
-    uint8_t status = 0b10000000 + 32 * bits_channel + 4 * bits_bits + bits_gain;
-    // 12-14-16-18 бит это b10000000-b10000100-b10001000-b10001100 (x80/x84/x88/x8C)
-
-    WriteFile(hSerial, &setADC, sizeof(setADC), &bc, NULL);
-    WriteFile(hSerial, &status, sizeof(status), &bc, NULL);
-
-    return 1;
-
-}
-*/
 
 
 
@@ -328,6 +263,7 @@ double SENSOR_FET::Get_voltage()
 
     uint8_t expected_status = status - 0b10000000;
 
+    int reRead {0};
     do
     {
 
@@ -347,32 +283,32 @@ double SENSOR_FET::Get_voltage()
         ReadFile(hSerial, &adc.meas_0, 1, &bc, NULL);
         ReadFile(hSerial, &adc.meas_status, 1, &bc, NULL);
 
+        if(adc.meas_status  == expected_status)
+            break;
 
-        // если сбой сопровождается изменением с байте статуса - то АЦП запускается повторно, со сбросом, тк без него это занимает секунд 10 (!)
-        if(adc.meas_status  != expected_status)
+        if(reRead > 1)
+            return std::nan("");
+
+        Beep(523,50);
+        // если сбой сопровождается изменением в байте статуса - то АЦП запускается повторно, со сбросом, тк без него это занимает секунд 10 (!)
+        if(!PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR))
         {
-            if(!PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR))
-            {
-                MessageBox(NULL, "PurgeComm() failed!", "Error", MB_OK);
+            MessageBox(NULL, "PurgeComm() failed!", "Error", MB_OK);
  //                  CloseHandle(hSerial);
-                return 0;
-            }
+            return 0;
+        }
 
-            Reset();
+        Reset();
 
  //           wxYield();
-            Beep(523,50);
 
-            WriteFile(hSerial, &setADC, sizeof(setADC), &bc, NULL);
-            WriteFile(hSerial, &status, sizeof(status), &bc, NULL);
+        WriteFile(hSerial, &setADC, sizeof(setADC), &bc, NULL);
+        WriteFile(hSerial, &status, sizeof(status), &bc, NULL);
         // но пока почему-то прога зависает, а окошко не появляется.
+        ++reRead;
 
-
-
-        }
     }
-    while(adc.meas_status  != expected_status);
-
+    while(adc.meas_status  != expected_status); // а зачем дважды проверять? аналогичная проверка выше идет ведь...
 
 
 // both corrections equal 0 for 18 bit and x1 gain.  But smth is wrong exactly with 0.
@@ -415,9 +351,13 @@ double SENSOR_FET::Get_voltage()
 double SENSOR_FET::Get_current() // mA
 {
     double voltage = Get_voltage();
+
+    if(std::isnan(voltage))
+    return std::nan("");
+
+    double current =  1000 * ( voltage ) / ( drain_detection_gain ) - drain_zero_current;
 //    double current = drain_zero_current + 1000 * ( ( voltage - adc_ref / 2.0) / r_shunt) / ( 2.0 * drain_current_gain ) ;
 //    double current =  1000 * ( voltage / r_shunt) / ( drain_detection_gain ) - drain_zero_current; // for high-side sensing
-    double current =  1000 * ( voltage ) / ( drain_detection_gain ) - drain_zero_current;
 
     return current; // mA
 }

@@ -90,7 +90,7 @@ private:
 //    gain ADC_amp        = ;
     gain current_gain{x1};
 
-    uint8_t status{};
+    uint8_t status{0b10000100}; // 14-bit
 
     HANDLE hSerial = INVALID_HANDLE_VALUE;
 
