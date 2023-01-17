@@ -34,6 +34,7 @@ class interface_testFrame: public wxFrame
             idMenuQuit = 1000,
             idMenuAbout,
             idMenuSaveAs,
+            idMenuOpen,
             idMenuSettingSave,
             idMenuSettingChange,
             idMenuSettingDefault,
@@ -83,6 +84,7 @@ class interface_testFrame: public wxFrame
         void OnQuit(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
         void OnSaveAs(wxCommandEvent& event);
+        void OnOpen(wxCommandEvent& event);
         void OnSettingSave(wxCommandEvent& event);
         void OnSettingChange(wxCommandEvent& event);
         void OnSettingDefault(wxCommandEvent& event);

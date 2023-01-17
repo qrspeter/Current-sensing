@@ -29,6 +29,8 @@
 
 #include <vector>
 #include <fstream>
+#include <sstream> // std::stringstream
+#include <algorithm> // is_sorted() in opening  file
 
 
 SENSOR_FET sensor;
@@ -112,6 +114,7 @@ BEGIN_EVENT_TABLE(interface_testFrame, wxFrame)
     EVT_MENU(idMenuSaveAs, interface_testFrame::OnSaveAs)
     EVT_MENU(idMenuAbout, interface_testFrame::OnAbout)
     EVT_MENU(idMenuQuit, interface_testFrame::OnQuit)
+    EVT_MENU(idMenuOpen, interface_testFrame::OnOpen)
 
     EVT_MENU(idMenuSettingSave, interface_testFrame::OnSettingSave)
     EVT_MENU(idMenuSettingChange, interface_testFrame::OnSettingChange)
@@ -147,6 +150,7 @@ interface_testFrame::interface_testFrame(wxFrame *frame, const wxString& title)
     wxMenuBar* mbar = new wxMenuBar();
     wxMenu* fileMenu = new wxMenu(_T(""));
     fileMenu->Append(idMenuSaveAs, _("&Save as...\tCtrl-s"), _("Save data"));
+    fileMenu->Append(idMenuOpen, _("&Open\tCtrl-o"), _("Open"));
     fileMenu->Append(idMenuQuit, _("&Quit\tAlt-F4"), _("Quit the application"));
     mbar->Append(fileMenu, _("&File"));
 
@@ -426,7 +430,7 @@ void interface_testFrame::OnSaveAs(wxCommandEvent &event)
             }
 
             fsave.close();
-            SetTitle(wxString("Data saved - ") << SaveDialog->GetFilename());
+            SetTitle(wxString("Data saved - ") << SaveDialog -> GetFilename());
         }
         else
         {
@@ -443,7 +447,99 @@ void interface_testFrame::OnSaveAs(wxCommandEvent &event)
 
  }
 
+void interface_testFrame::OnOpen(wxCommandEvent &event)
+{
 
+    wxFileDialog *openFileDialog = new wxFileDialog(this, _("Open File..."), wxEmptyString, wxEmptyString, _("Text files (*.txt)|*.txt|ASCII Files (*.asc)|*.asc"), wxFD_OPEN|wxFD_FILE_MUST_EXIST, wxDefaultPosition);
+
+    if (openFileDialog->ShowModal() == wxID_CANCEL)
+        return;     // the user changed idea...
+
+    std::ifstream fopen; // std::getline is designed for use with input stream classes (std::basic_istream) so you should be using the std::ifstream class instead of std::ofstream
+    fopen.open(openFileDialog->GetPath(), std::ios::in);
+
+    if (fopen.is_open())
+    {
+        std::string myline;
+        std::string word;
+        std::getline(fopen, myline);
+
+        I_data.resize(0);
+        V_data.resize(0);
+        T_data.resize(0);
+
+        while(std::getline(fopen, myline))
+        {
+
+            std::stringstream str(myline); // https://java2blog.com/read-csv-file-in-cpp/, https://stackoverflow.com/questions/34218040/how-to-read-a-csv-file-data-into-an-array
+            std::getline(str, word, '\t');
+            T_data.push_back(std::stod(word, nullptr));
+            std::getline(str, word, '\t');
+            V_data.push_back(std::stod(word, nullptr));
+            std::getline(str, word, '\t');
+            I_data.push_back(std::stod(word, nullptr));
+// std::stod    - Convert string to double https://cplusplus.com/reference/string/stod/
+
+        }
+
+        fopen.close();
+
+        if(V_data.size() == 0)
+        {
+            wxMessageBox( wxT("File is empty"), wxT("Error"), wxOK | wxICON_INFORMATION);
+            return;
+        }
+
+        SetTitle(wxString("Opened file - ") << openFileDialog -> GetFilename()); // SetTitle(wxString("Data saved - ") << SaveDialog->GetFilename());
+
+
+        framework_graph -> DelAllLayers(true, true);
+        mpInfoCoords *frame_coord = new mpInfoCoords();
+        framework_graph->AddLayer(frame_coord);
+        mpFXYVector *frameworkVector = new mpFXYVector();
+        frameworkVector->SetContinuity(true);
+        frameworkVector->SetPen(wxPen(wxColor(0xFF, 0x00, 0x00), 2, wxPENSTYLE_SOLID));
+
+
+        framework_graph->AddLayer(frameworkVector);
+
+        mpScaleY *scaleY = new mpScaleY(wxT("Current, mA"), mpALIGN_BOTTOM, true);
+
+        mpScaleX *scaleX = new mpScaleX(wxT("X"), mpALIGN_LEFT, true); // а тут надо как раз первую строку считывать
+
+
+
+//        if(V_data.begin() != V_data.back())  // or compare begin(),  and end()
+ //       if( (V_data.begin() != V_data.back()) && (is_sorted(std::begin(V_data), std::end(V_data))) ) // || is_sorted(std::begin(V_data), std::end(V_data), std::greater<double>()))
+        if( (V_data[0] != V_data.back()) && (is_sorted(std::begin(V_data), std::end(V_data)) ||  is_sorted(std::begin(V_data), std::end(V_data), std::greater<double>()))) // ||
+        {
+            frameworkVector -> SetData(V_data, I_data);
+            scaleX -> SetName(wxT("Voltage, V"));
+        }
+        else
+        {
+            frameworkVector -> SetData(T_data, I_data);
+            scaleX -> SetName(wxT("Time, T"));
+
+        }
+
+        framework_graph->AddLayer(scaleX);
+        framework_graph->AddLayer(scaleY);
+
+
+        framework_graph -> Fit();
+
+    }
+    else
+    {
+        wxMessageBox( wxT("Can not open file"), wxT("Open file"), wxOK | wxICON_INFORMATION);
+
+    }
+
+
+
+
+}
 
 void interface_testFrame::Sensor_connect(wxCommandEvent &event)
 {
