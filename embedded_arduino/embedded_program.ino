@@ -10,10 +10,7 @@
  * Программа не преобразует напряжение в отсчеты и обратно, все это вынесено в управляющую программу на ПК (для облегчения отладки)
  * Также не информирует о статусе преобразования и о успешности записи команд в периферийные устройства.
  * 
- * Требуется "переинициализация", когда работа начнется с биполярным напряжением, 
- * тк сейчас по умолчанию на выходах ЦАП ноль, 
- * который будет равен мину ХХ В в биполярном режиме/
- * А также изменение констант смещения ЦАП.
+ * Требуется изменение констант смещения ЦАП.
  * 
  * Может еще не хватает функции "разбудить-усыпить", чтобы в обычное время опрос порта шел с задержкой в цикле 100 мс, а с приемом первого байта - без задержек. 
  * Но тогда надо знать сколко байтов будет принято
@@ -59,7 +56,8 @@ const byte setDAC_Gate    = 1;
 const byte setDAC_Drain   = 2;
 const byte setADC         = 3; // а может и не нужен, если режим задавать в команде опроса АЦП. Хотя проще период считать на компе, снимая отладку с микроконтроллера
 const byte getADC         = 4; // а вот тут куча свободных бит для режима работы
-
+const byte setLaser_On    = 5;
+const byte setLaser_Off   = 6;
 
 
 struct ADC_result_18
@@ -86,14 +84,14 @@ struct DAC_voltage
 };
 
 struct DAC_voltage voltage;
-struct DAC_voltage drain_bias =  {0x80, 0}; // потом это должен быть не 0, а ~4096/2=2048 = x800 = x08 + x00, а то будет висеть минус ХЗ
-struct DAC_voltage gate_bias  =  {0x80, 0}; // потом это должен быть не 0, а ~4096/2=2048 = x800, а то будет висеть минус ХЗ
+struct DAC_voltage drain_bias =  {0x80, 0}; // 4096/2=2048 = x800 = x08 + x00
+struct DAC_voltage gate_bias  =  {0x80, 0}; // 
 
 
 void Sensor_reset()
 {
 
-  resetFunc(); //  NVIC_SystemReset(); // asm volatile (”jmp 0″); // void (softReset){ asm volatile (" jmp 0");
+   resetFunc(); //  NVIC_SystemReset(); // asm volatile (”jmp 0″); // void (softReset){ asm volatile (" jmp 0");
   
    Wire.beginTransmission(0x00); // The general call addresses all devices on the bus using the I2C address 0.
    Wire.write(0x06); 
@@ -121,7 +119,8 @@ void setup() {
 
 // ==============
   // TEST initialize digital pin LED_BUILTIN as an output.
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT);  // это же то же самое?  pinMode(13, OUTPUT); // объявляем пин 13 как выход
+
 // ==============
   
   Serial.begin(9600);
@@ -177,9 +176,9 @@ void loop()
 // ==============
   */
 
- // int first_lap_sign = 0;
+	int first_lap_sign = 0;
 
-    if( Serial.available()) 
+    if(Serial.available()) 
     {
       delay(7); // задержка тормозит получение данных при большой скорость выборки, а если убрать - то на 18бит начинаются странные данные, ну и помехи на других режимах. Тут 70 вроде минимум
 
@@ -281,15 +280,29 @@ void loop()
           }
           first_lap_sign = 1;
           
-         }
-         while( (adc_status >> 7) && 1 ); // if bit 7 == 0 data was updated
+        }
+        while( (adc_status >> 7) && 1 ); // if bit 7 == 0 data was updated
         
-         if(bit_mode == bit18)
-         Serial.write((byte*)&adc18, sizeof(adc18));
-         else
-         Serial.write((byte*)&adc12_16, sizeof(adc12_16));
+        if(bit_mode == bit18)
+        Serial.write((byte*)&adc18, sizeof(adc18));
+        else
+        Serial.write((byte*)&adc12_16, sizeof(adc12_16));
 
-         break;
+        break;
+
+  //===============================================================
+        case setLaser_On:
+			digitalWrite(LED_BUILTIN, HIGH);
+//			digitalWrite(13, HIGH);
+
+        break;
+
+  //===============================================================
+        case setLaser_Off:
+			digitalWrite(LED_BUILTIN, LOW);
+
+        break;
+
         
   //      default:
         

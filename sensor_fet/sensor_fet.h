@@ -10,6 +10,8 @@ enum resolution{
 enum gain{
     x1 = 0, x2 = 1, x4 = 2, x8 = 3};
 
+enum laser{
+    LASER_OFF, LASER_ON};
 
 class SENSOR_FET
 {
@@ -53,9 +55,17 @@ public:
     void Set_zero_current(double);
     double Get_zero_current();
 
+    void Laser(laser);
+    void setPulseDuraion(double);
+    void setPulseNumbers(int);
+    double getPulseDuraion();
+    int getPulseNumbers();
+
 private:
 
 
+    int pulse_numbers = 1;
+    double pulse_duration = 1.0;
     double Get_voltage();
 
 	int com_port;// Номер подключаемого COM порта.
@@ -105,7 +115,8 @@ private:
     const uint8_t setDAC_Drain  = 2;
     const uint8_t setADC        = 3; // а может и не нужен, если режим задавать в команде опроса АЦП. Хотя проще период считать на компе, снимая отладку с микроконтроллера
     const uint8_t getADC        = 4;
-
+    const uint8_t setLaser_On   = 5;
+    const uint8_t setLaser_Off  = 6;
 
 
     union{

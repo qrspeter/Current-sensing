@@ -38,6 +38,7 @@ class interface_testFrame: public wxFrame
             idMenuSettingSave,
             idMenuSettingChange,
             idMenuSettingDefault,
+            idMenuSettingLaser,
 
             idIV_meas_start,
             idIV_meas_stop,
@@ -88,6 +89,7 @@ class interface_testFrame: public wxFrame
         void OnSettingSave(wxCommandEvent& event);
         void OnSettingChange(wxCommandEvent& event);
         void OnSettingDefault(wxCommandEvent& event);
+        void OnSettingLaser(wxCommandEvent& event);
 
 
 //        void Sensor_COM(wxCommandEvent &event);

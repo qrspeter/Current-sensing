@@ -3,6 +3,7 @@
  *  Устанавливает напряжение двух ЦАП (затвор и сток), конвертируя напряжение double в отсчеты ЦАП.
  *  Запускает АЦП и задает его настройки (выбор АЦП, разрядность, усиление)
  *  Считывает отсчеты АЦП и конвертирует их в напряжение (хотя нам нужен будет ток).
+ *  Включает-выключает лазер через цифровой вывод Ардуино.
  *  А также устанавливает константы пересчета отсчетов в напряжение и обратно.
  *
  */
@@ -344,7 +345,7 @@ double SENSOR_FET::Get_voltage()
     double result = adc_ref * static_cast<double>(raw_adc) / (1 * (static_cast<double> (adc_counts) / adc_correction)); // временно без коррекции на усиление ,а может так и понятнее будет....
 //    double result = adc_ref * ( 0x10000 * adc.meas_2 + 0x100 * adc.meas_1 + adc.meas_0) / (gain_correction * ((double) adc_counts / adc_correction));
 
-   return double(result);
+    return double(result);
 
 }
 
@@ -428,9 +429,9 @@ double SENSOR_FET::Get_dac_ref()
 int SENSOR_FET::CheckState() // Возвращает да/нет, в зависимости от состояния подключения.
 {
 	if(hSerial == INVALID_HANDLE_VALUE) // Т.е. счетчик не подключался.
-	return 0;
+        return 0;
 	else
-	return 1;
+        return 1;
 }
 
 void SENSOR_FET::Close()
@@ -465,9 +466,9 @@ void SENSOR_FET::Set_ADC(resolution set_res, gain set_gain)
 void SENSOR_FET::Set_shunt(double shunt)
 {
     if( (shunt > 0) && (shunt < 10))
-    r_shunt = shunt;
+        r_shunt = shunt;
     else
-    Beep(223, 50);
+        Beep(223, 50);
 
 
 }
@@ -481,9 +482,9 @@ double SENSOR_FET::Get_shunt()
 void SENSOR_FET::Set_zero_current(double current)
 {
     if( (current > -100) && (current < 100))
-    drain_zero_current = current;
+        drain_zero_current = current;
     else
-    Beep(223, 50);
+        Beep(223, 50);
 
 }
 
@@ -491,3 +492,33 @@ double SENSOR_FET::Get_zero_current()
 {
     return drain_zero_current;
 }
+
+void SENSOR_FET::Laser(laser las)
+{
+    if(las == LASER_ON)
+        WriteFile(hSerial, &setLaser_On, sizeof(setLaser_On), &bc, NULL);
+    else
+        WriteFile(hSerial, &setLaser_Off, sizeof(setLaser_Off), &bc, NULL);
+
+}
+
+void SENSOR_FET::setPulseDuraion(double duration)
+{
+    pulse_duration = duration;
+}
+
+void SENSOR_FET::setPulseNumbers(int numbers)
+{
+    pulse_numbers = numbers;
+}
+
+double SENSOR_FET::getPulseDuraion()
+{
+    return pulse_duration;
+}
+
+int SENSOR_FET::getPulseNumbers()
+{
+    return pulse_numbers;
+}
+

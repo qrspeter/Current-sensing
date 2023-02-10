@@ -119,6 +119,7 @@ BEGIN_EVENT_TABLE(interface_testFrame, wxFrame)
     EVT_MENU(idMenuSettingSave, interface_testFrame::OnSettingSave)
     EVT_MENU(idMenuSettingChange, interface_testFrame::OnSettingChange)
     EVT_MENU(idMenuSettingDefault, interface_testFrame::OnSettingDefault)
+    EVT_MENU(idMenuSettingLaser, interface_testFrame::OnSettingLaser)
 
     EVT_BUTTON(idSensor_connect, interface_testFrame::Sensor_connect)
 
@@ -157,7 +158,8 @@ interface_testFrame::interface_testFrame(wxFrame *frame, const wxString& title)
     wxMenu* settingMenu = new wxMenu(_T(""));
     settingMenu->Append(idMenuSettingSave, _("&Save setting\tCtrl-p"), _("Save current setting"));
     settingMenu->Append(idMenuSettingChange, _("&Change settings\tCtrl-a"), _("Change ADC-DAC settings"));
-    settingMenu->Append(idMenuSettingDefault, _("&Load default\tCtrl-d"), _("Load default setting"));
+    settingMenu->Append(idMenuSettingLaser, _("&Laser setting\tCtrl-a"), _("Change laser settings"));
+    settingMenu->Append(idMenuSettingDefault, _("Load &default\tCtrl-d"), _("Load default setting"));
     mbar->Append(settingMenu, _("&Setting"));
 
 
@@ -700,6 +702,64 @@ void interface_testFrame::OnSettingChange(wxCommandEvent &event)
 	setting_change -> Destroy();
 
 }
+
+
+void interface_testFrame::OnSettingLaser(wxCommandEvent &event)
+{
+    setting_change = new wxDialog(this, -1, _("Laser setting"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE, "dialogBox");
+
+
+
+    wxPanel *setting_panel = new wxPanel(setting_change, -1);
+
+    wxBoxSizer *setting_sizer = new wxBoxSizer( wxVERTICAL );
+
+    wxGridSizer *adjustment_sizer = new wxGridSizer(2,2,3,3); //     wxGridSizer *wxIVGrid  = new wxGridSizer(4,2,3,3);
+    wxGridSizer *button_sizer = new wxGridSizer(1,2,3,3);
+
+
+
+
+    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("Pulse duration, s")), 0, wxSHAPED);
+    wxSpinCtrlDouble *dac_ref_voltage = new wxSpinCtrlDouble(setting_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 0, drain_voltage_max, sensor.Get_dac_ref(), 0.0, wxT("smth"));
+    adjustment_sizer -> Add(dac_ref_voltage, 0, wxSHAPED);
+    dac_ref_voltage -> SetDigits(2);
+    dac_ref_voltage -> SetIncrement(0.01);
+
+    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("Number of pulses")), 0, wxSHAPED);
+    output_v_max = new wxSpinCtrlDouble(setting_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 0, 40, sensor.Get_voltage_drain_max(), 0.0, wxT("smth"));
+    output_v_max -> SetDigits(1);
+    output_v_max -> SetIncrement(0.1);
+    adjustment_sizer -> Add(output_v_max, 0, wxSHAPED);
+
+    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("Total time is 2 * duration * number")), 0, wxSHAPED);
+
+    wxButton* setting_OK = new wxButton(setting_panel, wxID_OK, "Ok"); // как совестить автоматическое закрывание окна и обработку данных?
+//    wxButton* setting_OK = new wxButton(setting_panel, idSetting_OK, "Ok");
+    wxButton* setting_cancel = new wxButton(setting_panel, wxID_CANCEL, "Cancel");
+    button_sizer -> Add(setting_OK, 0, wxCENTER);
+    button_sizer -> Add(setting_cancel, 0, wxCENTER);
+
+    setting_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("")), 0, wxEXPAND);
+    setting_sizer -> Add(adjustment_sizer, 0, wxCENTER);
+    setting_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("")), 0, wxEXPAND);
+    setting_sizer -> Add(button_sizer, 0, wxCENTER);
+
+    setting_panel -> SetSizer(setting_sizer);
+
+	if (setting_change -> ShowModal() == wxID_OK) // If the user clicked "OK"
+	{
+
+        sensor.Set_dac_ref(dac_ref_voltage  -> GetValue());
+
+
+	}
+	// Clean up after ourselves
+	setting_change -> Destroy();
+
+}
+
+
 
 // функция чтобы обрабатывать ENTER https://forums.wxwidgets.org/viewtopic.php?f=1&t=46747&p=196346#p196332
 // Catch wxEVT_TEXT_ENTER event and call Navigate() in the event handler
