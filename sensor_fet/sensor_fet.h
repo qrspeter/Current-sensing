@@ -37,8 +37,8 @@ public:
     int Set_adc_ref(double);
 //    double Get_Vdd();
 //    double Get_Vss();
-    double Get_voltage_drain_max();
-    double Get_voltage_gate_max();
+//    double Get_voltage_drain_max();
+//    double Get_voltage_gate_max();
 
     double Get_dac_ref();
     double Get_adc_ref();
@@ -56,23 +56,33 @@ public:
     double Get_zero_current();
 
     void Laser(laser);
-    void setPulseDuraion(double);
-    void setPulseNumbers(int);
-    double getPulseDuraion();
-    int getPulseNumbers();
+    void SetPulseDuraion(double);
+    void SetPulseNumbers(int);
+    void SetPulseDelay(double);
+    double GetPulseDuraion();
+    int GetPulseNumbers();
+    double GetPulseDelay();
+
+    double GetDrainLimit();
+    void SetDrainLimit(double);
+    double GetGateLimit();
+    void SetGateLimit(double);
 
 private:
 
+    double gate_limit{40.0}; // voltage_max
+    double drain_limit{12.0}; // voltage_min
 
-    int pulse_numbers = 1;
-    double pulse_duration = 1.0;
+    int pulse_numbers = 4;
+    double pulse_duration = 0.2;
+    double pulse_delay = 0.05;
     double Get_voltage();
 
 	int com_port;// Номер подключаемого COM порта.
 //    double voltage_dd = 12.00;
 //    double voltage_ss = -12.06;
-    double voltage_gate_max = 40.0;
-    double voltage_drain_max = 12.0;
+//    double voltage_gate_max = 40.0;
+//    double voltage_drain_max = 12.0;
     double dac_ref = 4.98;
     double adc_ref = 2.048;
 

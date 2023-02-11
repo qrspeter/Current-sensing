@@ -170,12 +170,12 @@ int SENSOR_FET::Set_voltage(terminal  term, double voltage)
     if(term == GATE)
     {
         voltage_gain = gate_gain;
-        voltage_max = voltage_gate_max;
+        voltage_max = gate_limit;
     }
     else
     {
         voltage_gain = drain_gain;
-        voltage_max = voltage_drain_max;
+        voltage_max = drain_limit;
     }
 
     if(voltage > voltage_max)
@@ -387,15 +387,15 @@ int SENSOR_FET::Set_Vss(double Vss)
 }
 */
 
-double SENSOR_FET::Get_voltage_drain_max()
-{
-    return voltage_drain_max;
-}
-
-double SENSOR_FET::Get_voltage_gate_max()
-{
-    return voltage_gate_max;
-}
+//double SENSOR_FET::Get_voltage_drain_max()
+//{
+//    return voltage_drain_max;
+//}
+//
+//double SENSOR_FET::Get_voltage_gate_max()
+//{
+//    return voltage_gate_max;
+//}
 
 
 
@@ -502,23 +502,52 @@ void SENSOR_FET::Laser(laser las)
 
 }
 
-void SENSOR_FET::setPulseDuraion(double duration)
+void SENSOR_FET::SetPulseDuraion(double duration)
 {
     pulse_duration = duration;
 }
 
-void SENSOR_FET::setPulseNumbers(int numbers)
+void SENSOR_FET::SetPulseNumbers(int numbers)
 {
     pulse_numbers = numbers;
 }
 
-double SENSOR_FET::getPulseDuraion()
+double SENSOR_FET::GetPulseDuraion()
 {
     return pulse_duration;
 }
 
-int SENSOR_FET::getPulseNumbers()
+int SENSOR_FET::GetPulseNumbers()
 {
     return pulse_numbers;
 }
 
+void SENSOR_FET::SetPulseDelay(double delay)
+{
+    pulse_delay = delay;
+}
+
+double SENSOR_FET::GetPulseDelay()
+{
+    return pulse_delay;
+}
+
+void SENSOR_FET::SetDrainLimit(double limit)
+{
+    drain_limit = limit;
+}
+
+double SENSOR_FET::GetDrainLimit()
+{
+    return drain_limit;
+}
+
+void SENSOR_FET::SetGateLimit(double limit)
+{
+    gate_limit = limit;
+}
+
+double SENSOR_FET::GetGateLimit()
+{
+    return gate_limit;
+}

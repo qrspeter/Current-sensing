@@ -43,6 +43,7 @@ class interface_testFrame: public wxFrame
             idIV_meas_start,
             idIV_meas_stop,
             idIV_modes,
+            idPhotoelectric_mode,
 //            idTransferStart,
  //           idTransferStop,
             idTransient_start,
@@ -98,6 +99,8 @@ class interface_testFrame: public wxFrame
         void Meas_start(wxCommandEvent &event);
         void Meas_stop(wxCommandEvent &event);
         void IV_modes(wxCommandEvent &event);
+        void Photoelectric_mode(wxCommandEvent &event);
+        void Start_ADC_wait(resolution, gain);
 
 
         void Transient_start(wxCommandEvent &event);
@@ -124,6 +127,7 @@ class interface_testFrame: public wxFrame
         wxSpinCtrlDouble *delay_meas;
 
         wxRadioBox *IV_mode;
+        wxCheckBox *photoelectric_mode;
 
         wxSpinCtrlDouble *IV_bias;
         wxSpinCtrlDouble *IV_start;
@@ -137,18 +141,6 @@ class interface_testFrame: public wxFrame
         wxSpinCtrlDouble *trans_gate_stop;
         wxSpinCtrlDouble *trans_gate_step;
         wxSpinCtrlDouble *trans_interval;
-
-
-  //      wxDialog settingDAC;
-        wxSpinCtrlDouble *dac_ref_voltage;
-        wxSpinCtrlDouble *output_v_max;
-        wxSpinCtrlDouble *output_v_min;
-//        wxSpinCtrlDouble *adc_ref_voltage;
-        wxSpinCtrlDouble *r_shunt;
-        wxSpinCtrlDouble *adc_zero;
-
-        wxDialog *setting_change;
- //       wxButton* setting_OK;
 
 
         DECLARE_EVENT_TABLE()
