@@ -152,12 +152,9 @@ void interface_testFrame::Meas_start(wxCommandEvent &event)
 
         resolution res = static_cast<resolution>(sensor_resolution  -> GetSelection());
 
-        // вариант 1 - считать при каждом напряжении сигнал с лазером, без, и записывать усредненный темновой сигнал в I_data, а свeтовую разницу - в P_data.
-        // тогда особо переделывать нечего - только массив добавить, и м.б. возможность отображения той или иной кривой, или обе, если это возможно... например одна истинная, а вторая нормированная к первой.
-        // и записывать в файл тоже по-разному, то ли отдельными командами, то ли одной -но вместе, одноименные с дополнительной приставкой к имени ("_photo")
-        // вариант 2 - писать то что выше, и одновременно полную кривую, но не выводить на экран (а то порвется в режиме вывода IV тк будет много повторяющихся V).
-        // Решено, реализуем п. 1 и дополняет пунктом 2.
-        // эту исходную кривую можно поначалу в фотоном режиме в файл скидывать, и вообще не предполагать её вывод на экран, кроме как... кроме как в режиме вывода I(t))
+        // Считываем при каждом напряжении сигнал с лазером, без, и записываем усредненный темновой сигнал в I_data, а свeтовую разницу - в P_data.
+
+        // Можно дописать запись всего сигнала, без вывода на экран, и в фотоном режиме в файл скидывать.
 
 
         if(photoelectric_mode -> GetValue())
@@ -170,8 +167,8 @@ void interface_testFrame::Meas_start(wxCommandEvent &event)
             for(int i = 0; i < pulse_numbers; ++i)
             {
                 int measurements{0};
-                Sleep(pulse_delay);
                 auto start = std::chrono::steady_clock::now();
+                Sleep(pulse_delay);
                 double accum_curr{0};
                 while(static_cast<double>(since(start).count())/1000.0 < pulse_duration)
                 {
@@ -188,8 +185,10 @@ void interface_testFrame::Meas_start(wxCommandEvent &event)
                 }
 
                 accum_dark += accum_curr / static_cast<double>(measurements);
+                wxYield();
 
                 sensor.Laser(LASER_ON);
+                start = std::chrono::steady_clock::now();
                 Sleep(pulse_delay);
                 measurements = 0;
                 accum_curr = 0;
@@ -211,6 +210,7 @@ void interface_testFrame::Meas_start(wxCommandEvent &event)
 
                 accum_light += accum_curr / static_cast<double>(measurements);
                 sensor.Laser(LASER_OFF);
+                wxYield();
 
             }
 

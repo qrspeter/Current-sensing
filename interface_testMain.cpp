@@ -254,7 +254,7 @@ interface_testFrame::interface_testFrame(wxFrame *frame, const wxString& title)
     IV_start -> SetIncrement(0.1);
     wxIVGrid -> Add(IV_start, 0, wxSHAPED);
     wxIVGrid -> Add(new wxStaticText(framework_panel, -1, wxT("U stop, V")), 0, wxSHAPED);
-    IV_stop = new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -1*sensor.GetDrainLimit(), sensor.GetDrainLimit(), 0.0, 0.0, wxT("smth"));
+    IV_stop = new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -1*sensor.GetDrainLimit(), sensor.GetDrainLimit(), 2.0, 0.0, wxT("smth"));
     IV_stop -> SetDigits(1);
     IV_stop -> SetIncrement(0.1);
     wxIVGrid -> Add(IV_stop, 0, wxSHAPED);
@@ -457,7 +457,7 @@ void interface_testFrame::OnSaveAs(wxCommandEvent &event)
 void interface_testFrame::OnOpen(wxCommandEvent &event)
 {
 
-    wxFileDialog *openFileDialog = new wxFileDialog(this, _("Open File..."), wxEmptyString, wxEmptyString, _("Text files (*.txt)|*.txt|ASCII Files (*.asc)|*.asc"), wxFD_OPEN|wxFD_FILE_MUST_EXIST, wxDefaultPosition);
+    wxFileDialog *openFileDialog = new wxFileDialog(this, _("Open File..."), wxEmptyString, wxEmptyString, _("Comma Separated Files (*.csv)|*.csv|ASCII Files (*.asc)|*.asc*.csv|All Files (*.*)|*.*"), wxFD_OPEN|wxFD_FILE_MUST_EXIST, wxDefaultPosition);
 
     if (openFileDialog->ShowModal() == wxID_CANCEL)
         return;     // the user changed idea...
@@ -474,6 +474,7 @@ void interface_testFrame::OnOpen(wxCommandEvent &event)
         I_data.resize(0);
         V_data.resize(0);
         T_data.resize(0);
+        P_data.resize(0);
 
         while(std::getline(fopen, myline))
         {
@@ -486,6 +487,14 @@ void interface_testFrame::OnOpen(wxCommandEvent &event)
             std::getline(str, word, '\t');
             I_data.push_back(std::stod(word, nullptr));
 // std::stod    - Convert string to double https://cplusplus.com/reference/string/stod/
+
+ // добавить с проверкой на получение ненулевого значения, а если нулевое - то ничего не делать.
+// хотя почему-то простая вставка без проверки ничего не выводит.. отложили на потом.
+// https://en.cppreference.com/w/cpp/string/basic_string/getline  - " If no characters were extracted for whatever reason (not even the discarded delimiter), getline sets failbit and returns"
+    //           std::getline(str, word, '\t');
+    //           P_data.push_back(std::stod(word, nullptr));
+
+
 
         }
 
