@@ -29,6 +29,8 @@ const byte DAC_GATE_ADDRESS   = 0x60; // Troyka - 0x62
 const byte DAC_DRAIN_ADDRESS  = 0x61; // Troyka - 0x63
 const byte ADC_DRAIN_ADDRESS  = 0x68;
 
+const byte sleep_time[4]{ 5, 17, 67, 267 }; // 12bit = 1000/240 = 5, 14bit = 1000/60 = 17, 16bit = 1000/15 = 67, 18bit = 1000/3.75 = 267
+
 void(* resetFunc) (void) = 0;
 
 
@@ -48,6 +50,7 @@ byte status_ADC_drain = 0b10001100;
 // маска для битов, отвечающих на разрядность преобразования
 const byte ADC_mode_mask = 0b00001100;
 
+byte averaging{1};
  
 
 // operation codes // or enum/struct? https://radioprog.ru/post/655
@@ -58,6 +61,7 @@ const byte setADC         = 3; // а может и не нужен, если р�
 const byte getADC         = 4; // а вот тут куча свободных бит для режима работы
 const byte setLaser_On    = 5;
 const byte setLaser_Off   = 6;
+const byte setADCav       = 7;
 
 
 struct ADC_result_18
@@ -75,6 +79,19 @@ struct ADC_result_12_16
     byte meas_status;
 } adc12_16;
 
+union
+{
+  uint32_t adc_result;
+  struct
+  {
+    byte meas_3;
+    byte meas_2;
+    byte meas_1;
+    byte meas_0;
+  };
+}adc;
+
+byte meas_status{};
 
 
 struct DAC_voltage
@@ -87,6 +104,9 @@ struct DAC_voltage voltage;
 struct DAC_voltage drain_bias =  {0x80, 0}; // 4096/2=2048 = x800 = x08 + x00
 struct DAC_voltage gate_bias  =  {0x80, 0}; // 
 
+
+byte adc_status;
+adc_bit_mode bit_mode;
 
 void Sensor_reset()
 {
@@ -177,7 +197,7 @@ void loop()
 // ==============
   */
 
-	int first_lap_sign = 0;
+	int first_lap_sign {1};
 
     if(Serial.available()) 
     {
@@ -186,7 +206,7 @@ void loop()
       switch(Serial.read())
       {
         // или через указатели http://mypractic.ru/urok-15-ukazateli-v-c-dlya-arduino-preobrazovanie-raznyx-tipov-dannyx-v-bajty.html 
-	        case sensor_reset:
+	      case sensor_reset:
             Sensor_reset();
 
             break;
@@ -240,54 +260,176 @@ void loop()
         break;
 
   //===============================================================
-        case getADC:
-  
-        Wire.beginTransmission(ADC_DRAIN_ADDRESS);
-  
-        byte adc_status;
-        adc_bit_mode bit_mode;
-        adc_status = status_ADC_drain & ADC_mode_mask; // устанавливается при запуске АЦП, то есть опрос не проводить до запуска
+        case setADCav:
         
+          averaging = Serial.read();
+          status_ADC_drain = Serial.read();
+          Wire.beginTransmission(ADC_DRAIN_ADDRESS);
+          byte mode = status_ADC_drain & 0b00001100;
+          mode = mode >> 2;
+          uint32_t accumulation{0};
+                
+
+
+          adc_status = status_ADC_drain & ADC_mode_mask; // устанавливается при запуске АЦП, то есть опрос не проводить до запуска
+
+          if(adc_status == ADC_mode_mask) // status_ADC_drain = 0b10001100, ADC_mode_mask = 0b00001100
+          bit_mode = bit18;
+          else
+          bit_mode = bit12_16;
+
+
+          for(byte i = 0; i < averaging; ++i)
+          {
+            adc.adc_result = 0;
+
+            Wire.write(status_ADC_drain);  //  12-14-16-18 бит это b10000000-b10000100-b10001000-b10001100 (x80/x84/x88/x8C)
+
+
+            delay(sleep_time[mode]);            
+
+
+
+
+
+
+            Wire.beginTransmission(ADC_DRAIN_ADDRESS);
+      
+            do
+            {
+              if(!first_lap_sign)
+              delay(50); 
+              
+              if(bit_mode == bit18) 
+              {
+                Wire.requestFrom(ADC_DRAIN_ADDRESS, sizeof(adc18)); 
+      
+                adc.meas_2 = Wire.read();
+                adc.meas_1 = Wire.read();
+                adc.meas_0 = Wire.read();
+                meas_status = Wire.read();
+                adc_status = meas_status;
+                
+              }
+              else
+              {
+                Wire.requestFrom(ADC_DRAIN_ADDRESS, sizeof(adc12_16)); 
+                adc.meas_1 = Wire.read();
+                adc.meas_0 = Wire.read();
+                meas_status = Wire.read();
+                adc_status = meas_status;
+              
+              }
+              first_lap_sign = 0;
+              
+            }
+            while( (adc_status >> 7) && 1 ); // if bit 7 == 0 data was updated
+
+            int raw_adc{0};
+            if(bit_mode == bit18)
+            {
+              if (adc.meas_2 > 0x7F)
+              {
+                raw_adc =  0xFF000000 + static_cast<unsigned int> (0x10000 * adc.meas_2) + static_cast<unsigned int> (0x100 * adc.meas_1) + static_cast<unsigned int> (adc.meas_0);
+              }
+              else
+                raw_adc = static_cast<unsigned int> (0x10000 * adc.meas_2) + static_cast<unsigned int> (0x100 * adc.meas_1) + static_cast<unsigned int> (adc.meas_0);
+            }
+            else
+            {
+              if(adc.meas_1 > 0x7F)
+              {
+                raw_adc =  0xFFFF0000 + static_cast<unsigned int> (0x100 * adc.meas_1) + static_cast<unsigned int> (adc.meas_0);                
+              }
+              else
+                raw_adc =  static_cast<unsigned int> (0x100 * adc.meas_1) + static_cast<unsigned int> (adc.meas_0);
+            }
+            accumulation += raw_adc;
+
+          }
+ 
+        
+        adc.adc_result = accumulation / averaging;
+
+        
+        Wire.endTransmission();
+
+   //     status_byte = 1;           
+  //      Serial.write(status_byte);      
+
+
+
+        break;
+
+  //===============================================================
+        case getADC:
+
+        adc_status = status_ADC_drain & ADC_mode_mask; // устанавливается при запуске АЦП, то есть опрос не проводить до запуска
+
         if(adc_status == ADC_mode_mask) // status_ADC_drain = 0b10001100, ADC_mode_mask = 0b00001100
         bit_mode = bit18;
         else
         bit_mode = bit12_16;
 
-        
-        do
+        if(averaging == 1)
         {
-          if(first_lap_sign)
-          delay(50); 
-          
-          if(bit_mode == bit18) 
+
+          Wire.beginTransmission(ADC_DRAIN_ADDRESS);
+    
+          do
           {
-            Wire.requestFrom(ADC_DRAIN_ADDRESS, sizeof(adc18)); 
-  
-            adc18.meas_2 = Wire.read();
-            adc18.meas_1 = Wire.read();
-            adc18.meas_0 = Wire.read();
-            adc18.meas_status = Wire.read();
-            adc_status = adc18.meas_status;
-             
+            if(!first_lap_sign)
+            delay(50); 
+            
+            if(bit_mode == bit18) 
+            {
+              Wire.requestFrom(ADC_DRAIN_ADDRESS, sizeof(adc18)); 
+    
+              adc18.meas_2 = Wire.read();
+              adc18.meas_1 = Wire.read();
+              adc18.meas_0 = Wire.read();
+              adc18.meas_status = Wire.read();
+              adc_status = adc18.meas_status;
+              
+            }
+            else
+            {
+              Wire.requestFrom(ADC_DRAIN_ADDRESS, sizeof(adc12_16)); 
+              adc12_16.meas_1 = Wire.read();
+              adc12_16.meas_0 = Wire.read();
+              adc12_16.meas_status = Wire.read();
+              adc_status = adc12_16.meas_status;
+            
+            }
+            first_lap_sign = 0;
+            
+          }
+          while( (adc_status >> 7) && 1 ); // if bit 7 == 0 data was updated
+
+          if(bit_mode == bit18)
+          Serial.write((byte*)&adc18, sizeof(adc18));
+          else
+          Serial.write((byte*)&adc12_16, sizeof(adc12_16));
+        }        
+        else
+        {
+          averaging = 1; // reset
+          if(bit_mode == bit18)
+          {
+            
+            Serial.write((byte*)&adc.meas_2, sizeof(byte));
+            Serial.write((byte*)&adc.meas_1, sizeof(byte));
+            Serial.write((byte*)&adc.meas_0, sizeof(byte));
           }
           else
           {
-            Wire.requestFrom(ADC_DRAIN_ADDRESS, sizeof(adc12_16)); 
-            adc12_16.meas_1 = Wire.read();
-            adc12_16.meas_0 = Wire.read();
-            adc12_16.meas_status = Wire.read();
-            adc_status = adc12_16.meas_status;
-           
+            Serial.write((byte*)&adc.meas_1, sizeof(byte));
+            Serial.write((byte*)&adc.meas_0, sizeof(byte));       
+
           }
-          first_lap_sign = 1;
-          
         }
-        while( (adc_status >> 7) && 1 ); // if bit 7 == 0 data was updated
-        
-        if(bit_mode == bit18)
-        Serial.write((byte*)&adc18, sizeof(adc18));
-        else
-        Serial.write((byte*)&adc12_16, sizeof(adc12_16));
+
+
 
         break;
 

@@ -68,7 +68,18 @@ public:
     double GetGateLimit();
     void SetGateLimit(double);
 
+
+
+
+    void SetZeroCorrMode(bool);
+    bool GetZeroCorrMode();
+    void SetAveraging(int);
+    int GetAveraging();
+
 private:
+
+    bool zero_corr{FALSE};
+    uint8_t averaging{1};
 
     double gate_limit{40.0}; // voltage_max
     double drain_limit{12.0}; // voltage_min
@@ -127,11 +138,14 @@ private:
     const uint8_t getADC        = 4;
     const uint8_t setLaser_On   = 5;
     const uint8_t setLaser_Off  = 6;
+    const uint8_t setADCav      = 7;
 
 
-    union{
+    union
+    {
       uint16_t  voltage;
-      struct{
+      struct
+      {
         uint8_t volt_0;
         uint8_t volt_1;
       };

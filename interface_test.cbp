@@ -68,8 +68,6 @@
 		<Unit filename="mathplot/MathPlotConfig.h" />
 		<Unit filename="mathplot/mathplot.cpp" />
 		<Unit filename="mathplot/mathplot.h" />
-		<Unit filename="measurement.cpp" />
-		<Unit filename="measurement.h" />
 		<Unit filename="resource.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>

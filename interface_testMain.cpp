@@ -28,9 +28,20 @@
 #include <wx/progdlg.h> // https://docs.wxwidgets.org/trunk/classwx_progress_dialog.html или https://flylib.com/books/en/3.138.1.74/1/
 
 #include <vector>
+#include <chrono>
 #include <fstream>
 #include <sstream> // std::stringstream
 #include <algorithm> // is_sorted() in opening  file
+
+
+// убрать константы и прочее из глобальной видимости - то ли прописав в *.h, то ли в фигурных скобках каких-то функций внутри.... Ёто же приватные объекты класса...
+// а то что переменные/константы наход€тс€ в заголовочных файлах моих классов такжев в глобальной видимости, и благодар€ этому доступны тут напр€мую - это тоже нехорошо. ћожно объ€вл€ть в классе и обращатьс€ через ::?
+// My case: https://stackoverflow.com/questions/2043493/where-to-declare-define-class-scope-constants-in-c
+// https://stackoverflow.com/questions/12042549/define-constant-variables-in-c-header
+// https://ru.stackoverflow.com/questions/419546/ - ÷елочисленна€ константа в классе - enum или static const?
+// https://www.cyberforum.ru/cpp-beginners/thread2403123.html -  онстанты в классе
+// https://cplusplus.com/forum/general/173036/ - Multiple .cpp and .h files with constant
+// ¬ —++17 можно задавать константы в заголовочном файле, а не дублировать - https://www.learncpp.com/cpp-tutorial/sharing-global-constants-across-multiple-files-using-inline-variables/
 
 
 SENSOR_FET sensor;
@@ -48,6 +59,26 @@ const wxString transient_modes[] = { wxT("Adjustment"), wxT("Lagger")};
 
 
 bool measurementStop{FALSE}; // Flag
+
+// https://stackoverflow.com/questions/2808398/easily-measure-elapsed-time
+template <
+    class result_t   = std::chrono::milliseconds,
+    class clock_t    = std::chrono::steady_clock,
+    class duration_t = std::chrono::milliseconds
+>
+auto since(std::chrono::time_point<clock_t, duration_t> const& start)
+{
+    return std::chrono::duration_cast<result_t>(clock_t::now() - start);
+}
+
+bool compLess(int a, int b) // for minmax_element
+{
+    return (a < b);
+}
+
+// move to SENSOR class
+const int sleep_time[4]{ 5, 17, 67, 267 }; // 12bit = 1000/240 = 5, 14bit = 1000/60 = 17, 16bit = 1000/15 = 67, 18bit = 1000/3.75 = 267
+
 
 //int screen_elements = 300;
 
@@ -417,18 +448,18 @@ void interface_testFrame::OnSaveAs(wxCommandEvent &event)
         {
             if(P_data.empty())
             {
-                fsave << "#Time, sec  \t Voltage, V \t Current, mA" << std::endl; //
+                fsave << "#Time (sec), Voltage (V), Current (A)" << std::endl; //
                 for(unsigned int i = 0; i < I_data.size(); i++) //
                 {
-                    fsave << T_data[i] << "\t" << V_data[i] << "\t" << I_data[i] << std::endl;
+                    fsave << T_data[i] << ", " << V_data[i] << ", " << I_data[i]/1000.0 << std::endl;
                 }
             }
             else
             {
-                fsave << "#Time, sec  \t Voltage, V \t Dark Current, mA \t PhotoCurrent, mA" << std::endl; //
+                fsave << "#Time (sec), Voltage (V), Dark Current (mA), PhotoCurrent (A)" << std::endl; //
                 for(unsigned int i = 0; i < I_data.size(); i++) //
                 {
-                    fsave << T_data[i] << "\t" << V_data[i] << "\t" << I_data[i] << "\t" << P_data[i] << std::endl;
+                    fsave << T_data[i] << ", " << V_data[i] << ", " << I_data[i]/1000.0 << ", " << P_data[i]/1000.0 << std::endl;
                 }
 
             }
@@ -623,7 +654,7 @@ void interface_testFrame::OnSettingChange(wxCommandEvent &event)
 
 
 // https://docs.wxwidgets.org/2.8.8/wx_wxdialog.html#wxdialog
-    wxDialog *setting_change = new wxDialog(this, -1, _("Setting"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE, "dialogBox");
+    wxDialog *setting_change = new wxDialog(this, -1, _("Setting"), wxDefaultPosition, wxSize(250, 300), wxDEFAULT_DIALOG_STYLE, "dialogBox"); // wxDefaultSize
 
 
 
@@ -631,10 +662,23 @@ void interface_testFrame::OnSettingChange(wxCommandEvent &event)
 
     wxBoxSizer *setting_sizer = new wxBoxSizer( wxVERTICAL );
 
-    wxGridSizer *adjustment_sizer = new wxGridSizer(5,2,3,3); //     wxGridSizer *wxIVGrid  = new wxGridSizer(4,2,3,3);
+    wxGridSizer *adjustment_sizer = new wxGridSizer(7,2,3,3); //     wxGridSizer *wxIVGrid  = new wxGridSizer(4,2,3,3);
     wxGridSizer *button_sizer = new wxGridSizer(1,2,3,3);
 
 
+    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("Zero correction")), 0, wxSHAPED);
+    wxCheckBox *zero_correction = new wxCheckBox(setting_panel, -1, wxT("Enable"));
+    adjustment_sizer -> Add(zero_correction, 0, wxSHAPED);
+    zero_correction ->  SetValue(sensor.GetZeroCorrMode());
+
+
+    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("Averaging")), 0, wxSHAPED);
+    wxSpinCtrl *averaging = new wxSpinCtrl(setting_panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 1, 64, sensor.GetAveraging(), wxT("smth"));
+//    wxSpinCtrl *averaging = new wxSpinCtrl(setting_panel, wxID_ANY, wxT("5"), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 100, 5);
+//    wxSpinCtrlDouble *averaging = new wxSpinCtrlDouble(setting_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 1, 64, 4, 1, wxT("smth"));
+    adjustment_sizer -> Add(averaging, 0, wxSHAPED);
+//    averaging -> SetDigits(2);
+//    averaging -> SetIncrement(1);
 
 
     adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("DAC ref, V")), 0, wxSHAPED);
@@ -700,7 +744,8 @@ void interface_testFrame::OnSettingChange(wxCommandEvent &event)
 //	    Beep(523,50);
 
         // bias for Vgs and Vds
-
+        sensor.SetZeroCorrMode(zero_correction -> GetValue());
+        sensor.SetAveraging(averaging -> GetValue());
         sensor.Set_dac_ref(dac_ref_voltage  -> GetValue());
   //      sensor.Set_Vdd(output_v_max -> GetValue());
     //    sensor.Set_Vss(output_v_min -> GetValue());
@@ -859,3 +904,504 @@ void interface_testFrame::Photoelectric_mode(wxCommandEvent& evt)
 
     }
 }
+
+
+// ===============================================================================================
+// Measurements
+// ===============================================================================================
+
+void interface_testFrame::Start_ADC_wait(resolution res , gain gain_x)
+{
+    sensor.Start_ADC(res, gain_x);
+
+    if((sleep_time[sensor_resolution -> GetSelection()]) < static_cast<int>(delay_meas -> GetValue()*1000))
+    Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
+    else
+    Sleep(sleep_time[sensor_resolution  -> GetSelection()]);
+}
+
+
+void interface_testFrame::Meas_start(wxCommandEvent &event)
+{
+    if(!sensor.CheckState())
+    {
+        wxMessageDialog *dial = new wxMessageDialog (NULL, wxT( "Sensor is not connected" ) , wxT( " Error" ) , wxOK | wxICON_ERROR);
+        dial -> ShowModal();
+        return;
+    }
+
+    SetTitle(wxString("IV measurement Ц Data not saved"));
+
+    IV_meas_stop -> Enable();
+    IV_meas_start -> Disable();
+    IV_mode -> Disable();
+    photoelectric_mode -> Disable();
+    transient_meas_start -> Disable();
+    measurementStop = FALSE;
+
+
+    framework_graph -> DelAllLayers(true, true);
+    mpInfoCoords *frame_coord = new mpInfoCoords();
+    framework_graph->AddLayer(frame_coord);
+    mpFXYVector *frameworkVector = new mpFXYVector();
+    frameworkVector->SetContinuity(true);
+    frameworkVector->SetPen(wxPen(wxColor(0x00, 0x00, 0xFF), 2, wxPENSTYLE_SOLID));
+    framework_graph->AddLayer(frameworkVector);
+
+    mpFXYVector *frameworkVector_photo = new mpFXYVector();
+    if(photoelectric_mode -> GetValue())
+    {
+        frameworkVector_photo->SetContinuity(true);
+        frameworkVector_photo->SetPen(wxPen(wxColor(0xFF, 0x00, 0x00), 2, wxPENSTYLE_SOLID));
+        framework_graph->AddLayer(frameworkVector_photo);
+
+    }
+
+
+
+    mpScaleY *scaleY = new mpScaleY(wxT("Current, mA"), mpALIGN_BOTTOM, true);
+//    mpScaleY *scaleY_photo = new mpScaleY(wxT("Current, mA"), mpALIGN_BOTTOM, true);
+
+    mpScaleX *scaleX = new mpScaleX(wxT("Voltage, V"), mpALIGN_LEFT, true);
+
+    framework_graph->AddLayer(scaleX);
+    framework_graph->AddLayer(scaleY);
+//    if(photoelectric_mode -> GetValue())
+  //      framework_graph->AddLayer(scaleY_photo);
+
+    I_data.resize(0);
+    V_data.resize(0);
+    T_data.resize(0);
+    P_data.resize(0);
+    sensor.Laser(LASER_OFF);
+
+    auto start_time = std::chrono::steady_clock::now();
+
+
+    // сперва смещение, терминал определ€етс€ по состо€нию переключател€. ¬ыбор 0 - значит смещение на затвор, а сканирование на сток, 1 - наоборот.
+    if(IV_mode -> GetSelection() == 0)
+    sensor.Set_voltage(GATE, IV_bias -> GetValue());
+    else
+    sensor.Set_voltage(DRAIN, IV_bias -> GetValue());
+
+    double start = IV_start -> GetValue();
+    double stop = IV_stop -> GetValue();
+    double step = IV_step -> GetValue();
+
+    double scanDirection = 1.0;
+    if(start > stop)
+    {
+        scanDirection = -1.0;
+    }
+
+    int elements = 1 + static_cast<int> ( scanDirection * (stop - start) / static_cast<double>(step));
+
+
+//    double edge_x = (stop - start)/50;
+
+    I_data.reserve(elements);
+    V_data.reserve(elements);
+    T_data.reserve(elements);
+    if(photoelectric_mode -> GetValue())
+        P_data.reserve(elements);
+
+
+    resolution res = static_cast<resolution>(sensor_resolution  -> GetSelection());
+
+    double zero_correction{0};
+    if(sensor.GetZeroCorrMode())
+    {
+        sensor.Set_voltage(DRAIN, 0);
+        sensor.Set_voltage(GATE, 0);
+        Start_ADC_wait(res, static_cast<gain>(sensor_gain  -> GetSelection()));
+        zero_correction = sensor.Get_current();
+    }
+
+
+    for(double voltage = start; scanDirection * voltage <= scanDirection * stop + 1e-10;  voltage += scanDirection * step) // 0.0000000001 добавлена чтобы компенсировать набегание погрешности и окончани€ до последней точки
+    {
+
+        wxYield();
+        if(measurementStop)
+        break;
+
+        sensor.Set_voltage(static_cast<terminal>(IV_mode -> GetSelection()) , voltage);
+
+        // тут надо подождать при первом измерении секунду, а то скачок сигнала...
+//        if(voltage == start)
+//        {
+//            Sleep(1000);  // костыль, но хоть так!
+//
+//        }
+
+
+        res = static_cast<resolution>(sensor_resolution  -> GetSelection());
+
+        // —читываем при каждом напр€жении сигнал с лазером, без, и записываем усредненный темновой сигнал в I_data, а свeтовую разницу - в P_data.
+
+        // ћожно дописать запись всего сигнала, без вывода на экран, и в фотоном режиме в файл скидывать.
+
+
+        if(photoelectric_mode -> GetValue())
+        {
+            double pulse_delay = sensor.GetPulseDelay();
+            double pulse_duration = sensor.GetPulseDuraion();
+            int pulse_numbers = sensor.GetPulseNumbers();
+            double accum_dark{0};
+            double accum_light{0};
+            for(int i = 0; i < pulse_numbers; ++i)
+            {
+                int measurements{0};
+                auto start = std::chrono::steady_clock::now();
+                Sleep(pulse_delay);
+                double accum_curr{0};
+                while(static_cast<double>(since(start).count())/1000.0 < pulse_duration)
+                {
+                    Start_ADC_wait(res, static_cast<gain>(sensor_gain  -> GetSelection()));
+
+//                    sensor.Start_ADC(res, static_cast<gain>(sensor_gain  -> GetSelection()));
+//                    if((sleep_time[sensor_resolution -> GetSelection()]) < static_cast<int>(delay_meas -> GetValue()*1000))
+//                    Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
+//                    else
+//                    Sleep(sleep_time[sensor_resolution  -> GetSelection()]);
+
+                    accum_curr += sensor.Get_current();
+                    measurements++;
+                }
+
+                accum_dark += accum_curr / static_cast<double>(measurements) - zero_correction;
+                wxYield();
+
+                sensor.Laser(LASER_ON);
+                start = std::chrono::steady_clock::now();
+                Sleep(pulse_delay);
+                measurements = 0;
+                accum_curr = 0;
+
+                while(static_cast<double>(since(start).count())/1000.0 < pulse_duration)
+                {
+                    Start_ADC_wait(res, static_cast<gain>(sensor_gain  -> GetSelection()));
+
+//                    sensor.Start_ADC(res, static_cast<gain>(sensor_gain  -> GetSelection()));
+//                    if( (sleep_time[sensor_resolution  -> GetSelection()]) < static_cast<int>(delay_meas -> GetValue()*1000))
+//                    Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
+//                    else
+//                    Sleep(sleep_time[sensor_resolution  -> GetSelection()]);
+
+                    accum_curr +=  sensor.Get_current();
+                    measurements++;
+                }
+
+
+                accum_light += accum_curr / static_cast<double>(measurements) - zero_correction;
+                sensor.Laser(LASER_OFF);
+                wxYield();
+
+            }
+
+
+            V_data.push_back(voltage);
+            I_data.push_back(accum_dark/static_cast<double>(pulse_numbers)); //  Get_ADC
+            P_data.push_back((accum_light - accum_dark)/static_cast<double>(pulse_numbers));
+            T_data.push_back(static_cast<double>(since(start_time).count())/1000.0);
+
+            // можно отображать и P_data и I_data?
+            // https://sourceforge.net/p/wxmathplot/discussion/297266/thread/9c3512d9a6/
+            frameworkVector -> SetData(V_data, I_data);
+            frameworkVector_photo -> SetData(V_data, P_data);
+
+
+
+        }
+        else
+        {
+            Start_ADC_wait(res, static_cast<gain>(sensor_gain  -> GetSelection()));
+
+//            sensor.Start_ADC(res, static_cast<gain>(sensor_gain  -> GetSelection()));
+//            if((sleep_time[sensor_resolution -> GetSelection()]) < static_cast<int>(delay_meas -> GetValue()*1000))
+//            Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
+//            else
+//            Sleep(sleep_time[sensor_resolution  -> GetSelection()]);
+
+            V_data.push_back(voltage);
+            I_data.push_back(sensor.Get_current() - zero_correction); //  Get_ADC
+            T_data.push_back(static_cast<double>(since(start_time).count())/1000.0);
+
+            frameworkVector -> SetData(V_data, I_data);
+        }
+
+        framework_graph -> Fit();
+
+// //глючит вертикальное отображение когда крива€ не растет, а падает, выгл€дит нормально если мышкой вызывать Fit...
+
+//        auto vMinmax = std::minmax_element(I_data.begin(), I_data.end(), compLess);
+//
+//        if(start < stop)
+//        framework_graph -> Fit(start - edge_x, stop + edge_x, *vMinmax.first, *vMinmax.second);
+//        else
+//        framework_graph -> Fit();
+//       // framework_graph -> Fit(stop + edge_x, start - edge_x, *vMinmax.second, *vMinmax.first);
+
+
+
+
+        if(measurementStop)
+        break;
+    }
+
+    sensor.Set_voltage(GATE, 0);
+    sensor.Set_voltage(DRAIN, 0);
+
+    IV_meas_stop    -> Disable();
+    IV_meas_start   -> Enable();
+    if(photoelectric_mode -> GetValue() == 0)
+    {
+        IV_mode -> Enable();
+    }
+    photoelectric_mode      -> Enable();
+    transient_meas_start    -> Enable();
+    measurementStop = FALSE;
+
+}
+
+void interface_testFrame::Meas_stop(wxCommandEvent &event)
+{
+    IV_meas_stop -> Disable();
+
+    measurementStop = TRUE;
+}
+
+void interface_testFrame::Transient_start(wxCommandEvent &event)
+{
+
+    if(!sensor.CheckState())
+    {
+        wxMessageDialog *dial = new wxMessageDialog (NULL, wxT( "Sensor is not connected" ) , wxT( " Error" ) , wxOK | wxICON_ERROR);
+        dial -> ShowModal();
+        return;
+    }
+    SetTitle(wxString("Transient measurement Ц Data not saved"));
+
+    transient_meas_stop -> Enable();
+    transient_meas_start -> Disable();
+    IV_mode -> Disable();
+    IV_meas_start -> Disable();
+    measurementStop = FALSE;
+
+
+    framework_graph -> DelAllLayers(true, true);
+    mpInfoCoords *frame_coord = new mpInfoCoords();
+    framework_graph -> AddLayer(frame_coord);
+    mpFXYVector *frameworkVector = new mpFXYVector();
+    frameworkVector -> SetContinuity(false); // true
+    frameworkVector -> SetPen(wxPen(wxColor(0xFF, 0x00, 0x00), 5, wxPENSTYLE_SOLID));  // 2 for SetContinuity(true) and 5 for false
+
+    framework_graph -> AddLayer(frameworkVector);
+
+    mpScaleY *scaleY = new mpScaleY(wxT("Current, mA"), mpALIGN_BOTTOM, true);
+
+    mpScaleX *scaleX = new mpScaleX(wxT("Time, sec"), mpALIGN_LEFT, true);
+
+    framework_graph -> AddLayer(scaleX);
+    framework_graph -> AddLayer(scaleY);
+
+    frameworkVector -> SetData(V_data, I_data);
+
+
+ //   double current_time = 0;
+    int current_count = 0;
+
+    // or insert to do loop and save to additional vector and data?
+//    sensor.Set_voltage(GATE, trans_gate_start -> GetValue());
+//    sensor.Set_voltage(DRAIN, trans_drain_bias -> GetValue());
+
+    I_data.resize(0);
+    V_data.resize(0);
+    T_data.resize(0);
+
+//    double edge_x = screen_elements * trans_step -> GetValue() /50;
+
+
+    resolution res = static_cast<resolution>(sensor_resolution  -> GetSelection());
+
+    double zero_correction{0};
+    if(sensor.GetZeroCorrMode())
+    {
+        sensor.Set_voltage(DRAIN, 0);
+        sensor.Set_voltage(GATE, 0);
+        Start_ADC_wait(res, static_cast<gain>(sensor_gain  -> GetSelection()));
+        zero_correction = sensor.Get_current();
+    }
+
+
+
+    auto start_time = std::chrono::steady_clock::now();
+//    double previous_gate = 0.0;
+//    double previous_drain = 0.0;
+
+    if(transient_mode -> GetSelection() == 0)
+    {
+        do
+        {
+            sensor.Set_voltage(GATE, trans_gate_start -> GetValue());
+            sensor.Set_voltage(DRAIN, trans_drain_bias -> GetValue());
+
+
+            res = static_cast<resolution>(sensor_resolution  -> GetSelection());
+
+            Start_ADC_wait(res, static_cast<gain>(sensor_gain  -> GetSelection()));
+
+//        sensor.Start_ADC(res, static_cast<gain>(sensor_gain -> GetSelection()));
+//        if( (sleep_time[sensor_resolution -> GetSelection()]) < static_cast<int>(delay_meas -> GetValue()*1000))
+//        Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
+//        else
+//        Sleep(sleep_time[sensor_resolution -> GetSelection()]);
+
+            I_data.push_back(sensor.Get_current() - zero_correction); //  Get_ADC
+            T_data.push_back(static_cast<double>(since(start_time).count())/1000.0);
+            V_data.push_back(trans_gate_start -> GetValue());
+
+
+
+            frameworkVector -> SetData(T_data, I_data);
+            framework_graph -> Fit();
+
+
+//        if(current_count < screen_elements)
+//        {
+//
+//            auto vMinmax = std::minmax_element(I_data.begin(), I_data.end(), compLess);
+//            double min_ = *vMinmax.first;
+//            double max_ = *vMinmax.second;
+//            framework_graph -> Fit(-1*edge_x, screen_elements + edge_x, *vMinmax.first, *vMinmax.second);
+//        }
+//        else
+//        {
+//            // последние 300 только
+//            auto vMinmax = std::minmax_element(I_data.end() - screen_elements, I_data.end(), compLess);
+//            framework_graph -> Fit(current_count - screen_elements - edge_x, current_count + edge_x, *vMinmax.first, *vMinmax.second);
+//        }
+
+
+            wxYield();
+
+            current_count++;
+
+
+        }
+        while(!measurementStop);
+
+    }
+    else
+    {
+
+        int current_progress = 0;
+        wxProgressDialog *ProgressMeas = new wxProgressDialog (wxT("Progress"), wxT("Measuring..."), 100, NULL, wxPD_APP_MODAL|wxPD_AUTO_HIDE|wxPD_CAN_ABORT|wxPD_ELAPSED_TIME|wxPD_ESTIMATED_TIME|wxPD_REMAINING_TIME);
+
+
+/* https://docs.wxwidgets.org/trunk/classwx_generic_progress_dialog.html
+    wxProgressDialog dialog(...);
+    for ( int i = 0; i < 100; ++i ) {
+        if ( !dialog.Update(i)) {
+            // Cancelled by user.
+            break;
+        }
+
+        ... do something time-consuming (but not too much) ...
+    }
+*/
+
+/* or I will create a thread then. and how should I create dialogue on stack?
+Just create it as wxProgressDialog dlg("Heading", "Message", max) instead of using new to create it on the heap.
+
+*/
+
+        double start    = trans_gate_start -> GetValue();
+        double stop     = trans_gate_stop -> GetValue();
+        double step     = trans_gate_step -> GetValue();
+        double interval = trans_interval -> GetValue();
+
+        double scanDirection = 1.0;
+        if(start > stop)
+        {
+            scanDirection = -1.0;
+        }
+//        double edge_x = (stop - start)/50;
+
+        sensor.Set_voltage(DRAIN, trans_drain_bias -> GetValue());
+
+        for(double voltage = start; scanDirection * voltage <= scanDirection * stop + 0.0000000001;  voltage += scanDirection * step) // миллиарнда€ добавлена чтобы компенсировать набегание погрешности и окончани€ до последней точки
+        {
+          // Stop using wxProgressDialog now
+          //  if(measurementStop)
+          //  break;
+
+
+            // конвертировать меню в тип разрешени€?
+            resolution res = (resolution) sensor_resolution  -> GetSelection();
+
+            auto start_interval = std::chrono::steady_clock::now();
+            do
+            {
+
+                sensor.Set_voltage(GATE, voltage);
+
+                Start_ADC_wait(res, static_cast<gain>(sensor_gain  -> GetSelection()));
+
+//                sensor.Start_ADC(res, static_cast<gain>(sensor_gain  -> GetSelection()));
+//                if( (sleep_time[sensor_resolution  -> GetSelection()]) < static_cast<int> (delay_meas -> GetValue()*1000))
+//                Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
+//                else
+//                Sleep(sleep_time[sensor_resolution  -> GetSelection()]);
+
+
+                V_data.push_back(voltage);
+                I_data.push_back(sensor.Get_current() - zero_correction); //  Get_ADC
+                T_data.push_back(static_cast<double>(since(start_time).count())/1000.0);
+
+
+                frameworkVector -> SetData(T_data, I_data);
+                framework_graph -> Fit();
+
+                wxYield();
+
+            }
+            while(static_cast<double>(since(start_interval).count())/1000.0 < interval);
+
+            current_progress = static_cast<int> (100.0 * voltage * scanDirection / (stop - start));
+            if ( !ProgressMeas -> Update(current_progress))
+            {
+                delete ProgressMeas;
+                break;
+
+            }
+
+
+        }
+
+    }
+
+
+
+    sensor.Set_voltage(GATE, 0);
+    sensor.Set_voltage(DRAIN, 0);
+
+
+
+
+    SetTitle(wxString("IV measure Ц Data not saved"));
+    transient_meas_stop -> Disable();
+    transient_meas_start -> Enable();
+    IV_mode -> Enable();
+    IV_meas_start -> Enable();
+    measurementStop = FALSE;
+
+
+}
+void interface_testFrame::Transient_stop(wxCommandEvent &event)
+{
+    transient_meas_stop -> Disable();
+
+    measurementStop = TRUE;
+}
+

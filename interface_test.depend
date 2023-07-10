@@ -6037,3 +6037,121 @@
 	<cmath>
 	"sensor_fet.h"
 
+1671030256 source:e:\programming\fet_sensor\interface_test\interface_testapp.cpp
+	"wx_pch.h"
+	"interface_testApp.h"
+	"interface_testMain.h"
+	"sensor_fet/sensor_fet.h"
+
+1647256077 e:\programming\fet_sensor\interface_test\interface_testapp.h
+	<wx/app.h>
+
+1676280038 e:\programming\fet_sensor\interface_test\interface_testmain.h
+	<wx/wx.h>
+	"interface_testApp.h"
+	<wx/dialog.h>
+	"mathplot/mathplot.h"
+	"mathplot/MathPlotConfig.h"
+	"sensor_fet/sensor_fet.h"
+
+1638467936 e:\programming\fet_sensor\interface_test\mathplot\mathplot.h
+	<vector>
+	<wx/defs.h>
+	<wx/menu.h>
+	<wx/scrolwin.h>
+	<wx/event.h>
+	<wx/dynarray.h>
+	<wx/pen.h>
+	<wx/dcmemory.h>
+	<wx/string.h>
+	<wx/print.h>
+	<wx/image.h>
+	<cmath>
+	<deque>
+	<crtdbg.h>
+
+1638467936 e:\programming\fet_sensor\interface_test\mathplot\mathplotconfig.h
+	<wx/button.h>
+	<wx/checkbox.h>
+	<wx/choice.h>
+	<wx/colordlg.h>
+	<wx/dialog.h>
+	<wx/fontdlg.h>
+	<wx/notebook.h>
+	<wx/panel.h>
+	<wx/sizer.h>
+	<wx/spinctrl.h>
+	<wx/statbox.h>
+	<wx/stattext.h>
+	<wx/textctrl.h>
+	"mathplot.h"
+
+1681317496 e:\programming\fet_sensor\interface_test\sensor_fet\sensor_fet.h
+
+1689002036 source:e:\programming\fet_sensor\interface_test\interface_testmain.cpp
+	"wx_pch.h"
+	"interface_testMain.h"
+	<wx/filename.h>
+	<wx/progdlg.h>
+	<vector>
+	<chrono>
+	<fstream>
+	<sstream>
+	<algorithm>
+
+1638955348 source:e:\programming\fet_sensor\interface_test\mathplot\mathplot.cpp
+	<wx/wx.h>
+	"wx/object.h"
+	"wx/font.h"
+	"wx/colour.h"
+	"wx/settings.h"
+	"wx/sizer.h"
+	"wx/log.h"
+	"wx/intl.h"
+	"wx/dcclient.h"
+	"wx/cursor.h"
+	"mathplot.h"
+	<wx/bmpbuttn.h>
+	<wx/module.h>
+	<wx/msgdlg.h>
+	<wx/image.h>
+	<wx/tipwin.h>
+	<wx/clipbrd.h>
+	<cmath>
+	<cstdio>
+	<ctime>
+	"MathPlotConfig.h"
+
+1638467936 source:e:\programming\fet_sensor\interface_test\mathplot\mathplotconfig.cpp
+	"MathPlotConfig.h"
+	<wx/msgdlg.h>
+	<wx/intl.h>
+	<wx/string.h>
+
+1685111421 source:e:\programming\fet_sensor\interface_test\measurement.cpp
+	"measurement.h"
+	<wx/filename.h>
+	<wx/progdlg.h>
+	<vector>
+	<chrono>
+
+1673541177 e:\programming\fet_sensor\interface_test\measurement.h
+	"interface_testMain.h"
+	"sensor_fet/sensor_fet.h"
+
+1584205418 source:e:\programming\fet_sensor\interface_test\resource.rc
+	"wx/msw/wx.rc"
+
+1681306079 source:e:\programming\fet_sensor\interface_test\sensor_fet\sensor_fet.cpp
+	<windows.h>
+	<string>
+	<cmath>
+	"sensor_fet.h"
+
+1681291624 source:e:\programming\fet_sensor\interface_test\settings.cpp
+	"settings.h"
+
+1681290143 e:\programming\fet_sensor\interface_test\settings.h
+	"interface_testMain.h"
+	"sensor_fet/sensor_fet.h"
+

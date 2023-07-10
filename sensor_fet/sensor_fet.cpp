@@ -220,6 +220,8 @@ int SENSOR_FET::Set_voltage(terminal  term, double voltage)
 void SENSOR_FET::Start_ADC(resolution bits,  gain gain_x, int channel)
 {
 
+// добавить усреднение в запрос...  и потом в КОП
+
 // сбрасываем, т.к. иногда байты куда-то теряются и скачки происходят ступенькой, а так хоть разовым выбросом.
 
 	if(!PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR))
@@ -246,8 +248,17 @@ void SENSOR_FET::Start_ADC(resolution bits,  gain gain_x, int channel)
     status = 0b10000000 + 32 * channel + 4 * bits + gain_x;
     // 12-14-16-18 бит это b10000000-b10000100-b10001000-b10001100 (x80/x84/x88/x8C)
 
-    WriteFile(hSerial, &setADC, sizeof(setADC), &bc, NULL);
+    if(averaging == 1)
+        WriteFile(hSerial, &setADC, sizeof(setADC), &bc, NULL);
+    else
+    // когда доделаю КОП в контроллере
+    {
+        WriteFile(hSerial, &setADCav, sizeof(setADCav), &bc, NULL);
+        WriteFile(hSerial, &averaging, sizeof(averaging), &bc, NULL); // // то есть КОП setADCav предполагает что мк запросит еще один байт
+    }
     WriteFile(hSerial, &status, sizeof(status), &bc, NULL);
+
+
 
 }
 
@@ -550,4 +561,28 @@ void SENSOR_FET::SetGateLimit(double limit)
 double SENSOR_FET::GetGateLimit()
 {
     return gate_limit;
+}
+
+
+void SENSOR_FET::SetZeroCorrMode(bool corr)
+{
+    zero_corr = corr;
+}
+
+bool SENSOR_FET::GetZeroCorrMode()
+{
+    return zero_corr;
+}
+
+
+void SENSOR_FET::SetAveraging(int aver)
+{
+    if( (aver <= 64) && (aver > 0))
+        averaging = static_cast<uint8_t>(aver);
+
+}
+
+int SENSOR_FET::GetAveraging()
+{
+    return averaging;
 }
