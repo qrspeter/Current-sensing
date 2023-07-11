@@ -71,10 +71,10 @@ public:
 
 
 
-    void SetZeroCorrMode(bool);
-    bool GetZeroCorrMode();
-    void SetAveraging(int);
-    int GetAveraging();
+    void    SetZeroCorrMode(bool);
+    bool    GetZeroCorrMode();
+    void    SetAveraging(int);
+    int     GetAveraging();
 
 private:
 

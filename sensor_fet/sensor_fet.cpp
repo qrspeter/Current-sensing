@@ -11,7 +11,7 @@
 
 
 
-//#include <iostream>
+#include <iostream>
 //#include <wx/filename.h> // для wxYield
 
 #include <windows.h>
@@ -297,6 +297,9 @@ double SENSOR_FET::Get_voltage()
 
         if(adc.meas_status  == expected_status)
             break;
+
+//        auto test = adc; //.meas_status;
+
 
         if(reRead > 1)
             return std::nan("");

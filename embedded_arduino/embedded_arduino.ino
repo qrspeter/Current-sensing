@@ -111,7 +111,7 @@ adc_bit_mode bit_mode;
 void Sensor_reset()
 {
 
-   resetFunc(); //  NVIC_SystemReset(); // asm volatile (”jmp 0″); // void (softReset){ asm volatile (" jmp 0");
+//   resetFunc(); //  NVIC_SystemReset(); // asm volatile (”jmp 0″); // void (softReset){ asm volatile (" jmp 0");
   
    Wire.beginTransmission(0x00); // The general call addresses all devices on the bus using the I2C address 0.
    Wire.write(0x06); 
@@ -141,6 +141,11 @@ void setup() {
   // TEST initialize digital pin LED_BUILTIN as an output.
   pinMode(LED_BUILTIN, OUTPUT);  // это же то же самое?  pinMode(13, OUTPUT); // объявляем пин 13 как выход
   
+// ==============
+  // TEST wait for a second
+  digitalWrite(LED_BUILTIN, HIGH); 
+  delay(500);   
+  digitalWrite(LED_BUILTIN, LOW);   
 
 // ==============
   
@@ -154,7 +159,7 @@ void setup() {
   Wire.endTransmission();
 
 
-  // for initial programming only ============================   set initial voltage    
+  // for initial programming only ============================   set initial voltage ~2.5V   
 /*
         Wire.beginTransmission(DAC_GATE_ADDRESS);
         Wire.write(0b01100000);  // c2=0, c1=1, c2=1 (DAC + EEPROM), XX unused, PD1=PD0=0, X unused
@@ -201,7 +206,9 @@ void loop()
 
     if(Serial.available()) 
     {
-      delay(7); // задержка тормозит получение данных при большой скорость выборки, а если убрать - то на 18бит начинаются странные данные, ну и помехи на других режимах. Тут 70 вроде минимум
+//      delay(7); // задержка тормозит получение данных при большой скорость выборки, а если убрать - то на 18бит начинаются странные данные, ну и помехи на других режимах. Тут 70 вроде минимум
+      // навернео потому что тут проверяется есть ли хоть один байт, а следом команды могут требовать от 1 до 3 байт.
+      // или ввесли одну длину команд и не пускать обработку пока все байты не получены? Или ждать байтов в каждом случае case?
 
       switch(Serial.read())
       {
@@ -212,6 +219,7 @@ void loop()
             break;
   //===============================================================
         case setDAC_Gate:
+        while(Serial.available() < 2){ delay(2); }
         // get 12 bit
      //   dac_voltage.voltage = Serial.read();
         voltage.volt_1 = Serial.read();
@@ -232,6 +240,7 @@ void loop()
   //===============================================================        
         case setDAC_Drain:
         // get 12 bit
+        while(Serial.available() < 2){ delay(2); }
         voltage.volt_1 = Serial.read();
         voltage.volt_0 = Serial.read();
   
@@ -249,6 +258,7 @@ void loop()
   
   //===============================================================
         case setADC:
+        while(Serial.available() < 1){ delay(2); }
         status_ADC_drain = Serial.read();
         Wire.beginTransmission(ADC_DRAIN_ADDRESS);
         Wire.write(status_ADC_drain);  //  12-14-16-18 бит это b10000000-b10000100-b10001000-b10001100 (x80/x84/x88/x8C)
@@ -256,21 +266,95 @@ void loop()
 
    //     status_byte = 1;           
   //      Serial.write(status_byte);      
+        break;
+
+  //===============================================================
+        case getADC:
+
+        adc_status = status_ADC_drain & ADC_mode_mask; // устанавливается при запуске АЦП, то есть опрос не проводить до запуска
+
+        if(adc_status == ADC_mode_mask) // status_ADC_drain = 0b10001100, ADC_mode_mask = 0b00001100
+        bit_mode = bit18;
+        else
+        bit_mode = bit12_16;
+
+        if(averaging == 1)
+        {
+
+          Wire.beginTransmission(ADC_DRAIN_ADDRESS);
+    
+          do
+          {
+            if(!first_lap_sign)
+            delay(50); 
+            
+            if(bit_mode == bit18) 
+            {
+  
+              Wire.requestFrom(ADC_DRAIN_ADDRESS, sizeof(adc18)); 
+              adc18.meas_2 = Wire.read();
+              adc18.meas_1 = Wire.read();
+              adc18.meas_0 = Wire.read();
+              adc18.meas_status = Wire.read();
+              adc_status = adc18.meas_status;
+              
+            }
+            else
+            {
+  
+              Wire.requestFrom(ADC_DRAIN_ADDRESS, sizeof(adc12_16)); 
+              adc12_16.meas_1 = Wire.read();
+              adc12_16.meas_0 = Wire.read();
+              adc12_16.meas_status = Wire.read();
+              adc_status = adc12_16.meas_status;
+            
+            }
+            first_lap_sign = 0;
+            
+          }
+          while( (adc_status >> 7) && 1 ); // if bit 7 == 0 data was updated
+
+          if(bit_mode == bit18)
+          Serial.write((byte*)&adc18, sizeof(adc18));
+          else
+          Serial.write((byte*)&adc12_16, sizeof(adc12_16));
+        }        
+        else
+        {
+          averaging = 1; // reset
+          if(bit_mode == bit18){ Serial.write((byte*)&adc.meas_2, sizeof(byte)); }
+
+            Serial.write((byte*)&adc.meas_1, sizeof(byte));
+            Serial.write((byte*)&adc.meas_0, sizeof(byte));
+        }
+
+
 
         break;
 
   //===============================================================
+        case setLaser_On:
+			    digitalWrite(LED_BUILTIN, HIGH);
+//			digitalWrite(13, HIGH);
+
+        break;
+
+  //===============================================================
+        case setLaser_Off:
+			    digitalWrite(LED_BUILTIN, LOW);
+
+        break;
+
+  //===============================================================      
         case setADCav:
-        
-          averaging = Serial.read();
+          while(Serial.available() < 2){ delay(2); }
           status_ADC_drain = Serial.read();
+          averaging = Serial.read();
           Wire.beginTransmission(ADC_DRAIN_ADDRESS);
           byte mode = status_ADC_drain & 0b00001100;
           mode = mode >> 2;
           uint32_t accumulation{0};
-                
-
-
+ 
           adc_status = status_ADC_drain & ADC_mode_mask; // устанавливается при запуске АЦП, то есть опрос не проводить до запуска
 
           if(adc_status == ADC_mode_mask) // status_ADC_drain = 0b10001100, ADC_mode_mask = 0b00001100
@@ -285,13 +369,7 @@ void loop()
 
             Wire.write(status_ADC_drain);  //  12-14-16-18 бит это b10000000-b10000100-b10001000-b10001100 (x80/x84/x88/x8C)
 
-
             delay(sleep_time[mode]);            
-
-
-
-
-
 
             Wire.beginTransmission(ADC_DRAIN_ADDRESS);
       
@@ -362,91 +440,6 @@ void loop()
         break;
 
   //===============================================================
-        case getADC:
-
-        adc_status = status_ADC_drain & ADC_mode_mask; // устанавливается при запуске АЦП, то есть опрос не проводить до запуска
-
-        if(adc_status == ADC_mode_mask) // status_ADC_drain = 0b10001100, ADC_mode_mask = 0b00001100
-        bit_mode = bit18;
-        else
-        bit_mode = bit12_16;
-
-        if(averaging == 1)
-        {
-
-          Wire.beginTransmission(ADC_DRAIN_ADDRESS);
-    
-          do
-          {
-            if(!first_lap_sign)
-            delay(50); 
-            
-            if(bit_mode == bit18) 
-            {
-              Wire.requestFrom(ADC_DRAIN_ADDRESS, sizeof(adc18)); 
-    
-              adc18.meas_2 = Wire.read();
-              adc18.meas_1 = Wire.read();
-              adc18.meas_0 = Wire.read();
-              adc18.meas_status = Wire.read();
-              adc_status = adc18.meas_status;
-              
-            }
-            else
-            {
-              Wire.requestFrom(ADC_DRAIN_ADDRESS, sizeof(adc12_16)); 
-              adc12_16.meas_1 = Wire.read();
-              adc12_16.meas_0 = Wire.read();
-              adc12_16.meas_status = Wire.read();
-              adc_status = adc12_16.meas_status;
-            
-            }
-            first_lap_sign = 0;
-            
-          }
-          while( (adc_status >> 7) && 1 ); // if bit 7 == 0 data was updated
-
-          if(bit_mode == bit18)
-          Serial.write((byte*)&adc18, sizeof(adc18));
-          else
-          Serial.write((byte*)&adc12_16, sizeof(adc12_16));
-        }        
-        else
-        {
-          averaging = 1; // reset
-          if(bit_mode == bit18)
-          {
-            
-            Serial.write((byte*)&adc.meas_2, sizeof(byte));
-            Serial.write((byte*)&adc.meas_1, sizeof(byte));
-            Serial.write((byte*)&adc.meas_0, sizeof(byte));
-          }
-          else
-          {
-            Serial.write((byte*)&adc.meas_1, sizeof(byte));
-            Serial.write((byte*)&adc.meas_0, sizeof(byte));       
-
-          }
-        }
-
-
-
-        break;
-
-  //===============================================================
-        case setLaser_On:
-			digitalWrite(LED_BUILTIN, HIGH);
-//			digitalWrite(13, HIGH);
-
-        break;
-
-  //===============================================================
-        case setLaser_Off:
-			digitalWrite(LED_BUILTIN, LOW);
-
-        break;
-
-        
   //      default:
         
       }

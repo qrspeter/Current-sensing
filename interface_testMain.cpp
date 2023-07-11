@@ -914,10 +914,11 @@ void interface_testFrame::Start_ADC_wait(resolution res , gain gain_x)
 {
     sensor.Start_ADC(res, gain_x);
 
-    if((sleep_time[sensor_resolution -> GetSelection()]) < static_cast<int>(delay_meas -> GetValue()*1000))
+    auto sleeping = sensor.GetAveraging() * sleep_time[sensor_resolution  -> GetSelection()];
+    if(sleeping < static_cast<int>(delay_meas -> GetValue()*1000))
     Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
     else
-    Sleep(sleep_time[sensor_resolution  -> GetSelection()]);
+    Sleep(sleeping);
 }
 
 
