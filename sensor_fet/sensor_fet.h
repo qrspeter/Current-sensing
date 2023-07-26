@@ -55,6 +55,7 @@ public:
     void Set_zero_current(double);
     double Get_zero_current();
 
+// useless without laser
     void Laser(laser);
     void SetPulseDuraion(double);
     void SetPulseNumbers(int);
@@ -78,15 +79,16 @@ public:
 
 private:
 
-    bool zero_corr{FALSE};
+    bool zero_corr{TRUE};
     uint8_t averaging{1};
 
     double gate_limit{40.0}; // voltage_max
     double drain_limit{12.0}; // voltage_min
 
-    int pulse_numbers = 4;
-    double pulse_duration = 0.2;
-    double pulse_delay = 0.05;
+
+    int pulse_numbers{4};
+    double pulse_duration{0.2};
+    double pulse_delay{0.05};
     double Get_voltage();
 
 	int com_port;// Номер подключаемого COM порта.

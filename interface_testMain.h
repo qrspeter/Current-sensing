@@ -40,46 +40,15 @@ class interface_testFrame: public wxFrame
             idMenuSettingDefault,
             idMenuSettingLaser,
 
-            idIV_meas_start,
-            idIV_meas_stop,
+            idIV_start,
+            idIV_stop,
             idIV_modes,
-            idPhotoelectric_mode,
-//            idTransferStart,
- //           idTransferStop,
+
             idTransient_start,
             idTransient_stop,
             idTransient_modes,
 
             idSensor_connect,
-
-            // кажется лишние
-/*            idSensor_COM,
-            idSensor_resolution,
-            idSensor_gain,
-*/
-    /*        idIV_mode,
-            idIV_bias,
-            idIV_start,
-            idIV_stop,
-            idIV_step,
-*/
-            // кажется лишние
-/*            idTrans_drain_bias,
-            idTrans_gate_bias,
-            idTrans_step,
-*/
-
-// зачем столько событий, если все можно обрабатывать в событиях кнопки "ОК" или "Apply"?
-// да и в списке выше куча незадействованных id, к которым нет обращения.
-   /*         idDAC_ref_voltage,
-            idOutput_v_max,
-            idOutput_v_min,
-            idADC_ref_voltage,
-            idADC_zero,
-*/
-            // проверить какое из них работает, так то нужна всего одна
-   //         idSetting_OK,
-   //         idSetting_change
 
         };
         void OnClose(wxCloseEvent& event);
@@ -96,10 +65,9 @@ class interface_testFrame: public wxFrame
 //        void Sensor_COM(wxCommandEvent &event);
         void Sensor_connect(wxCommandEvent &event);
 
-        void Meas_start(wxCommandEvent &event);
-        void Meas_stop(wxCommandEvent &event);
+        void IV_start(wxCommandEvent &event);
+        void IV_stop(wxCommandEvent &event);
         void IV_modes(wxCommandEvent &event);
-        void Photoelectric_mode(wxCommandEvent &event);
         void Start_ADC_wait(resolution, gain);
 
 
@@ -113,8 +81,8 @@ class interface_testFrame: public wxFrame
 
         wxPanel *framework_panel;
 
-        wxButton *IV_meas_start;
-        wxButton *IV_meas_stop;
+        wxButton *iv_meas_start;
+        wxButton *iv_meas_stop;
         wxButton *transient_meas_start;
         wxButton *transient_meas_stop;
 
@@ -126,13 +94,12 @@ class interface_testFrame: public wxFrame
         wxChoice *sensor_gain;
         wxSpinCtrlDouble *delay_meas;
 
-        wxRadioBox *IV_mode;
-        wxCheckBox *photoelectric_mode;
+        wxRadioBox *iv_mode;
 
-        wxSpinCtrlDouble *IV_bias;
-        wxSpinCtrlDouble *IV_start;
-        wxSpinCtrlDouble *IV_stop;
-        wxSpinCtrlDouble *IV_step;
+        wxSpinCtrlDouble *iv_bias;
+        wxSpinCtrlDouble *iv_start;
+        wxSpinCtrlDouble *iv_stop;
+        wxSpinCtrlDouble *iv_step;
 
         wxRadioBox *transient_mode;
 

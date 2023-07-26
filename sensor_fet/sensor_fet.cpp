@@ -248,14 +248,14 @@ void SENSOR_FET::Start_ADC(resolution bits,  gain gain_x, int channel)
     status = 0b10000000 + 32 * channel + 4 * bits + gain_x;
     // 12-14-16-18 бит это b10000000-b10000100-b10001000-b10001100 (x80/x84/x88/x8C)
 
-    if(averaging == 1)
+ //   if(averaging == 1)
         WriteFile(hSerial, &setADC, sizeof(setADC), &bc, NULL);
-    else
-    // когда доделаю КОП в контроллере
-    {
-        WriteFile(hSerial, &setADCav, sizeof(setADCav), &bc, NULL);
-        WriteFile(hSerial, &averaging, sizeof(averaging), &bc, NULL); // // то есть КОП setADCav предполагает что мк запросит еще один байт
-    }
+//    else
+//    // когда доделаю КОП в контроллере
+//    {
+//        WriteFile(hSerial, &setADCav, sizeof(setADCav), &bc, NULL);
+//        WriteFile(hSerial, &averaging, sizeof(averaging), &bc, NULL); // // то есть КОП setADCav предполагает что мк запросит еще один байт
+//    }
     WriteFile(hSerial, &status, sizeof(status), &bc, NULL);
 
 
@@ -328,7 +328,7 @@ double SENSOR_FET::Get_voltage()
 
 // both corrections equal 0 for 18 bit and x1 gain.  But smth is wrong exactly with 0.
 // may be better without static_cast and 0 power.
-    double adc_correction = std::pow(2.0, double(( 3 - static_cast<int>(current_res)) * 2)); // reduction of  ADC counts for 12-14-16 bit (to 18 bit)
+    double adc_correction = std::pow(2.0, double(( 3.0 - static_cast<int>(current_res)) * 2.0)); // reduction of  ADC counts for 12-14-16 bit (to 18 bit)
     double gain_correction = std::pow(2.0, double(static_cast<int>(current_gain))); // embedded ADC gain - 1-2-4-8.
 
 
@@ -348,7 +348,7 @@ double SENSOR_FET::Get_voltage()
     {
         if(adc.meas_1 > 0x7F)
         {
-                raw_adc =  0xFFFF0000 + static_cast<unsigned int> (0x100 * adc.meas_1) + static_cast<unsigned int> (adc.meas_0);
+            raw_adc =  0xFFFF0000 + static_cast<unsigned int> (0x100 * adc.meas_1) + static_cast<unsigned int> (adc.meas_0);
         }
         else
             raw_adc =  static_cast<unsigned int> (0x100 * adc.meas_1) + static_cast<unsigned int> (adc.meas_0);
@@ -370,7 +370,7 @@ double SENSOR_FET::Get_current() // mA
     if(std::isnan(voltage))
     return std::nan("");
 
-    double current =  1000 * ( voltage ) / ( drain_detection_gain ) - drain_zero_current;
+    double current =  1000.0 * ( voltage ) / ( drain_detection_gain ) - drain_zero_current;
 //    double current = drain_zero_current + 1000 * ( ( voltage - adc_ref / 2.0) / r_shunt) / ( 2.0 * drain_current_gain ) ;
 //    double current =  1000 * ( voltage / r_shunt) / ( drain_detection_gain ) - drain_zero_current; // for high-side sensing
 
@@ -477,6 +477,8 @@ void SENSOR_FET::Set_ADC(resolution set_res, gain set_gain)
     ADC_amp = set_gain;
 }
 */
+
+// useless in transimpedance config
 void SENSOR_FET::Set_shunt(double shunt)
 {
     if( (shunt > 0) && (shunt < 10))
@@ -484,12 +486,10 @@ void SENSOR_FET::Set_shunt(double shunt)
     else
         Beep(223, 50);
 
-
 }
 
 double SENSOR_FET::Get_shunt()
 {
-
     return r_shunt;
 }
 

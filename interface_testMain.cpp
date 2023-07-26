@@ -130,11 +130,11 @@ BEGIN_EVENT_TABLE(interface_testFrame, wxFrame)
 
     EVT_BUTTON(idSensor_connect, interface_testFrame::Sensor_connect)
 
-    EVT_BUTTON(idIV_meas_start, interface_testFrame::Meas_start)
-    EVT_BUTTON(idIV_meas_stop, interface_testFrame::Meas_stop)
+    EVT_BUTTON(idIV_start, interface_testFrame::IV_start)
+    EVT_BUTTON(idIV_stop, interface_testFrame::IV_stop)
 
     EVT_RADIOBOX(idIV_modes, interface_testFrame::IV_modes)
-    EVT_CHECKBOX(idPhotoelectric_mode, interface_testFrame::Photoelectric_mode)
+//    EVT_CHECKBOX(idPhotoelectric_mode, interface_testFrame::Photoelectric_mode)
 
     EVT_BUTTON(idTransient_start, interface_testFrame::Transient_start)
     EVT_BUTTON(idTransient_stop, interface_testFrame::Transient_stop)
@@ -201,20 +201,17 @@ interface_testFrame::interface_testFrame(wxFrame *frame, const wxString& title)
     control_sizer -> Add(new wxStaticText(framework_panel, -1, wxT("")), 0, wxEXPAND);
 
 
-    photoelectric_mode = new wxCheckBox(framework_panel, idPhotoelectric_mode, wxT("Photoelectric mode"));
-    control_sizer -> Add(photoelectric_mode, 0, wxCENTER);
-
-    IV_mode = new wxRadioBox(framework_panel, idIV_modes, wxT("IV mode"), wxDefaultPosition, wxDefaultSize, 2, iv_modes, 0);
-    control_sizer -> Add(IV_mode, 0, wxCENTER);
+    iv_mode = new wxRadioBox(framework_panel, idIV_modes, wxT("IV mode"), wxDefaultPosition, wxDefaultSize, 2, iv_modes, 0);
+    control_sizer -> Add(iv_mode, 0, wxCENTER);
 
 //    control_sizer -> Add(new wxStaticText(framework_panel, -1, wxT("")), 0, wxEXPAND);
 
     control_sizer -> Add(wxIV,   0, wxEXPAND, 0);
 
-    IV_meas_start = new wxButton(framework_panel, idIV_meas_start, wxT("Start"));
-    control_sizer -> Add(IV_meas_start, 0, wxCENTER); //  | wxEXPAND
-    IV_meas_stop = new wxButton(framework_panel, idIV_meas_stop, wxT("Stop"));
-    control_sizer -> Add(IV_meas_stop, 0, wxCENTER); //  | wxEXPAND
+    iv_meas_start = new wxButton(framework_panel, idIV_start, wxT("Start"));
+    control_sizer -> Add(iv_meas_start, 0, wxCENTER); //  | wxEXPAND
+    iv_meas_stop = new wxButton(framework_panel, idIV_stop, wxT("Stop"));
+    control_sizer -> Add(iv_meas_stop, 0, wxCENTER); //  | wxEXPAND
 
     control_sizer -> Add(new wxStaticText(framework_panel, -1, wxT("")), 0, wxEXPAND);
 
@@ -228,10 +225,10 @@ interface_testFrame::interface_testFrame(wxFrame *frame, const wxString& title)
     transient_meas_stop = new wxButton(framework_panel, idTransient_stop, wxT("Stop"));
     control_sizer -> Add(transient_meas_stop, 0, wxCENTER); //  | wxEXPAND
 
-    // idIV_mode
+    // idiv_mode
 
-    IV_meas_start -> Disable();
-    IV_meas_stop -> Disable();
+    iv_meas_start -> Disable();
+    iv_meas_stop -> Disable();
     transient_meas_start -> Disable();
     transient_meas_stop -> Disable();
 
@@ -275,27 +272,26 @@ interface_testFrame::interface_testFrame(wxFrame *frame, const wxString& title)
     wxGridSizer *wxIVGrid  = new wxGridSizer(4,2,3,3);
 
     wxIVGrid -> Add(new wxStaticText(framework_panel, -1, wxT("U bias, V")), 0, wxSHAPED);
-    IV_bias = new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -1*sensor.GetGateLimit(), sensor.GetGateLimit(), 0.0, 0.0, wxT("smth"));
-    wxIVGrid -> Add(IV_bias, 0, wxSHAPED);
-    IV_bias -> SetDigits(1);
-    IV_bias -> SetIncrement(0.1);
+    iv_bias = new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -1*sensor.GetGateLimit(), sensor.GetGateLimit(), 0.0, 0.0, wxT("smth"));
+    wxIVGrid -> Add(iv_bias, 0, wxSHAPED);
+    iv_bias -> SetDigits(1);
+    iv_bias -> SetIncrement(0.1);
     wxIVGrid -> Add(new wxStaticText(framework_panel, -1, wxT("U start, V")), 0, wxSHAPED);
-    IV_start = new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -1*sensor.GetDrainLimit(), sensor.GetDrainLimit(), 0.0, 0.0, wxT("smth"));
-    IV_start -> SetDigits(1);
-    IV_start -> SetIncrement(0.1);
-    wxIVGrid -> Add(IV_start, 0, wxSHAPED);
+    iv_start = new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -1*sensor.GetDrainLimit(), sensor.GetDrainLimit(), 0.0, 0.0, wxT("smth"));
+    iv_start -> SetDigits(1);
+    iv_start -> SetIncrement(0.1);
+    wxIVGrid -> Add(iv_start, 0, wxSHAPED);
     wxIVGrid -> Add(new wxStaticText(framework_panel, -1, wxT("U stop, V")), 0, wxSHAPED);
-    IV_stop = new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -1*sensor.GetDrainLimit(), sensor.GetDrainLimit(), 2.0, 0.0, wxT("smth"));
-    IV_stop -> SetDigits(1);
-    IV_stop -> SetIncrement(0.1);
-    wxIVGrid -> Add(IV_stop, 0, wxSHAPED);
+    iv_stop = new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -1*sensor.GetDrainLimit(), sensor.GetDrainLimit(), 2.0, 0.0, wxT("smth"));
+    iv_stop -> SetDigits(1);
+    iv_stop -> SetIncrement(0.1);
+    wxIVGrid -> Add(iv_stop, 0, wxSHAPED);
     wxIVGrid -> Add(new wxStaticText(framework_panel, -1, wxT("U step, V")), 0, wxSHAPED);
-    IV_step = new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 0, 10.0, 0.1, 0.0, wxT("smth"));
-    IV_step -> SetDigits(2);
-    IV_step -> SetIncrement(0.05);
-    wxIVGrid -> Add(IV_step, 0, wxSHAPED);
+    iv_step = new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 0, 10.0, 0.1, 0.0, wxT("smth"));
+    iv_step -> SetDigits(2);
+    iv_step -> SetIncrement(0.05);
+    wxIVGrid -> Add(iv_step, 0, wxSHAPED);
 
-    // idIV_bias idIV_start idIV_stop idIV_step
 
     // wxSpinCtrlDouble example: https://stackoverflow.com/questions/42706594/distinguishing-between-different-wxspinctrldouble-events
     // wxSpinCtrlDouble(frame, wxID_ANY, "1.0", wxPoint(10, 10), wxSize(150, 20), wxSP_ARROW_KEYS | wxALIGN_RIGHT | wxTE_PROCESS_ENTER, 1.0, 20.0, 1.0, 1.0);
@@ -481,7 +477,7 @@ void interface_testFrame::OnSaveAs(wxCommandEvent &event)
 	}
 
 	// Clean up after ourselves
-	SaveDialog->Destroy();
+	SaveDialog -> Destroy();
 
  }
 
@@ -583,9 +579,6 @@ void interface_testFrame::OnOpen(wxCommandEvent &event)
 
     }
 
-
-
-
 }
 
 void interface_testFrame::Sensor_connect(wxCommandEvent &event)
@@ -596,7 +589,7 @@ void interface_testFrame::Sensor_connect(wxCommandEvent &event)
         sensor.Close();
         sensor_com_connect->SetLabel("Connect");
         sensor_com_choice -> Enable();
-        IV_meas_start -> Disable();
+        iv_meas_start -> Disable();
         transient_meas_start -> Disable();
    }
     else
@@ -610,7 +603,7 @@ void interface_testFrame::Sensor_connect(wxCommandEvent &event)
             sensor_com_connect -> Enable();
             sensor_com_connect->SetLabel("Disconnect");
             sensor_com_choice -> Disable();
-            IV_meas_start -> Enable();
+            iv_meas_start -> Enable();
             transient_meas_start -> Enable();
 
 //            sensor.Set_Vdd(voltage_dd);
@@ -720,7 +713,7 @@ void interface_testFrame::OnSettingChange(wxCommandEvent &event)
     // idDAC_ref_voltage idOutput_v_max idOutput_v_min idADC_ref_voltage idADC_zero
 
 
- //  IV_meas_start = new wxButton(setting_panel, idIV_meas_start, wxT("Start"));
+ //  iv_meas_start = new wxButton(setting_panel, idIV_start, wxT("Start"));
 
 //     sensor_com_connect = new wxButton(framework_panel, idSensor_connect, wxT("Connect"));
 
@@ -871,39 +864,23 @@ void interface_testFrame::Transient_modes(wxCommandEvent& evt)
 
 void interface_testFrame::IV_modes(wxCommandEvent& evt)
 {
-    if (IV_mode -> GetSelection() == 0)
+    if (iv_mode -> GetSelection() == 0)
     {
         // change limites
-        IV_bias -> SetRange(-1*sensor.GetGateLimit(), sensor.GetGateLimit());
-        IV_start -> SetRange(-1*sensor.GetDrainLimit(), sensor.GetDrainLimit());
-        IV_stop -> SetRange(-1*sensor.GetDrainLimit(), sensor.GetDrainLimit());
+        iv_bias -> SetRange(-1*sensor.GetGateLimit(), sensor.GetGateLimit());
+        iv_start -> SetRange(-1*sensor.GetDrainLimit(), sensor.GetDrainLimit());
+        iv_stop -> SetRange(-1*sensor.GetDrainLimit(), sensor.GetDrainLimit());
     }
     else
     {
         // change limites
-        IV_bias -> SetRange(-1*sensor.GetDrainLimit(), sensor.GetDrainLimit());
-        IV_start -> SetRange(-1*sensor.GetGateLimit(), sensor.GetGateLimit());
-        IV_stop -> SetRange(-1*sensor.GetGateLimit(), sensor.GetGateLimit());
+        iv_bias -> SetRange(-1*sensor.GetDrainLimit(), sensor.GetDrainLimit());
+        iv_start -> SetRange(-1*sensor.GetGateLimit(), sensor.GetGateLimit());
+        iv_stop -> SetRange(-1*sensor.GetGateLimit(), sensor.GetGateLimit());
     }
 
 }
 
-void interface_testFrame::Photoelectric_mode(wxCommandEvent& evt)
-{
-    if (photoelectric_mode -> GetValue())
-    {
-        IV_mode -> SetSelection(1);
-        IV_mode -> Disable();
-        IV_bias -> SetRange(-1*sensor.GetDrainLimit(), sensor.GetDrainLimit());
-        IV_start -> SetRange(-1*sensor.GetGateLimit(), sensor.GetGateLimit());
-        IV_stop -> SetRange(-1*sensor.GetGateLimit(), sensor.GetGateLimit());
-    }
-    else
-    {
-        IV_mode -> Enable();
-
-    }
-}
 
 
 // ===============================================================================================
@@ -922,7 +899,7 @@ void interface_testFrame::Start_ADC_wait(resolution res , gain gain_x)
 }
 
 
-void interface_testFrame::Meas_start(wxCommandEvent &event)
+void interface_testFrame::IV_start(wxCommandEvent &event)
 {
     if(!sensor.CheckState())
     {
@@ -933,61 +910,46 @@ void interface_testFrame::Meas_start(wxCommandEvent &event)
 
     SetTitle(wxString("IV measurement – Data not saved"));
 
-    IV_meas_stop -> Enable();
-    IV_meas_start -> Disable();
-    IV_mode -> Disable();
-    photoelectric_mode -> Disable();
+    iv_meas_stop -> Enable();
+    iv_meas_start -> Disable();
+    iv_mode -> Disable();
     transient_meas_start -> Disable();
     measurementStop = FALSE;
 
 
     framework_graph -> DelAllLayers(true, true);
     mpInfoCoords *frame_coord = new mpInfoCoords();
-    framework_graph->AddLayer(frame_coord);
+    framework_graph -> AddLayer(frame_coord);
     mpFXYVector *frameworkVector = new mpFXYVector();
-    frameworkVector->SetContinuity(true);
-    frameworkVector->SetPen(wxPen(wxColor(0x00, 0x00, 0xFF), 2, wxPENSTYLE_SOLID));
-    framework_graph->AddLayer(frameworkVector);
-
-    mpFXYVector *frameworkVector_photo = new mpFXYVector();
-    if(photoelectric_mode -> GetValue())
-    {
-        frameworkVector_photo->SetContinuity(true);
-        frameworkVector_photo->SetPen(wxPen(wxColor(0xFF, 0x00, 0x00), 2, wxPENSTYLE_SOLID));
-        framework_graph->AddLayer(frameworkVector_photo);
-
-    }
+    frameworkVector -> SetContinuity(true);
+    frameworkVector -> SetPen(wxPen(wxColor(0x00, 0x00, 0xFF), 2, wxPENSTYLE_SOLID));
+    framework_graph -> AddLayer(frameworkVector);
 
 
 
     mpScaleY *scaleY = new mpScaleY(wxT("Current, mA"), mpALIGN_BOTTOM, true);
-//    mpScaleY *scaleY_photo = new mpScaleY(wxT("Current, mA"), mpALIGN_BOTTOM, true);
 
     mpScaleX *scaleX = new mpScaleX(wxT("Voltage, V"), mpALIGN_LEFT, true);
 
-    framework_graph->AddLayer(scaleX);
-    framework_graph->AddLayer(scaleY);
-//    if(photoelectric_mode -> GetValue())
-  //      framework_graph->AddLayer(scaleY_photo);
+    framework_graph -> AddLayer(scaleX);
+    framework_graph -> AddLayer(scaleY);
 
     I_data.resize(0);
     V_data.resize(0);
     T_data.resize(0);
-    P_data.resize(0);
-    sensor.Laser(LASER_OFF);
 
     auto start_time = std::chrono::steady_clock::now();
 
 
     // сперва смещение, терминал определяется по состоянию переключателя. Выбор 0 - значит смещение на затвор, а сканирование на сток, 1 - наоборот.
-    if(IV_mode -> GetSelection() == 0)
-    sensor.Set_voltage(GATE, IV_bias -> GetValue());
+    if(iv_mode -> GetSelection() == 0)
+    sensor.Set_voltage(GATE, iv_bias -> GetValue());
     else
-    sensor.Set_voltage(DRAIN, IV_bias -> GetValue());
+    sensor.Set_voltage(DRAIN, iv_bias -> GetValue());
 
-    double start = IV_start -> GetValue();
-    double stop = IV_stop -> GetValue();
-    double step = IV_step -> GetValue();
+    double start = iv_start -> GetValue();
+    double stop = iv_stop -> GetValue();
+    double step = iv_step -> GetValue();
 
     double scanDirection = 1.0;
     if(start > stop)
@@ -998,13 +960,9 @@ void interface_testFrame::Meas_start(wxCommandEvent &event)
     int elements = 1 + static_cast<int> ( scanDirection * (stop - start) / static_cast<double>(step));
 
 
-//    double edge_x = (stop - start)/50;
-
     I_data.reserve(elements);
     V_data.reserve(elements);
     T_data.reserve(elements);
-    if(photoelectric_mode -> GetValue())
-        P_data.reserve(elements);
 
 
     resolution res = static_cast<resolution>(sensor_resolution  -> GetSelection());
@@ -1026,7 +984,7 @@ void interface_testFrame::Meas_start(wxCommandEvent &event)
         if(measurementStop)
         break;
 
-        sensor.Set_voltage(static_cast<terminal>(IV_mode -> GetSelection()) , voltage);
+        sensor.Set_voltage(static_cast<terminal>(iv_mode -> GetSelection()) , voltage);
 
         // тут надо подождать при первом измерении секунду, а то скачок сигнала...
 //        if(voltage == start)
@@ -1038,110 +996,24 @@ void interface_testFrame::Meas_start(wxCommandEvent &event)
 
         res = static_cast<resolution>(sensor_resolution  -> GetSelection());
 
-        // Считываем при каждом напряжении сигнал с лазером, без, и записываем усредненный темновой сигнал в I_data, а свeтовую разницу - в P_data.
+        Start_ADC_wait(res, static_cast<gain>(sensor_gain  -> GetSelection()));
 
-        // Можно дописать запись всего сигнала, без вывода на экран, и в фотоном режиме в файл скидывать.
+        V_data.push_back(voltage);
+        I_data.push_back(sensor.Get_current() - zero_correction); //  Get_ADC
+        T_data.push_back(static_cast<double>(since(start_time).count()) / 1000.0);
 
+        frameworkVector -> SetData(V_data, I_data);
 
-        if(photoelectric_mode -> GetValue())
-        {
-            double pulse_delay = sensor.GetPulseDelay();
-            double pulse_duration = sensor.GetPulseDuraion();
-            int pulse_numbers = sensor.GetPulseNumbers();
-            double accum_dark{0};
-            double accum_light{0};
-            for(int i = 0; i < pulse_numbers; ++i)
-            {
-                int measurements{0};
-                auto start = std::chrono::steady_clock::now();
-                Sleep(pulse_delay);
-                double accum_curr{0};
-                while(static_cast<double>(since(start).count())/1000.0 < pulse_duration)
-                {
-                    Start_ADC_wait(res, static_cast<gain>(sensor_gain  -> GetSelection()));
+ //глючило вертикальное отображение когда кривая не растет, а падает, выглядит нормально если мышкой вызывать Fit...
+ // и перестало :)
 
-//                    sensor.Start_ADC(res, static_cast<gain>(sensor_gain  -> GetSelection()));
-//                    if((sleep_time[sensor_resolution -> GetSelection()]) < static_cast<int>(delay_meas -> GetValue()*1000))
-//                    Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
-//                    else
-//                    Sleep(sleep_time[sensor_resolution  -> GetSelection()]);
+        auto vMinmax = std::minmax_element(I_data.begin(), I_data.end(), compLess);
 
-                    accum_curr += sensor.Get_current();
-                    measurements++;
-                }
-
-                accum_dark += accum_curr / static_cast<double>(measurements) - zero_correction;
-                wxYield();
-
-                sensor.Laser(LASER_ON);
-                start = std::chrono::steady_clock::now();
-                Sleep(pulse_delay);
-                measurements = 0;
-                accum_curr = 0;
-
-                while(static_cast<double>(since(start).count())/1000.0 < pulse_duration)
-                {
-                    Start_ADC_wait(res, static_cast<gain>(sensor_gain  -> GetSelection()));
-
-//                    sensor.Start_ADC(res, static_cast<gain>(sensor_gain  -> GetSelection()));
-//                    if( (sleep_time[sensor_resolution  -> GetSelection()]) < static_cast<int>(delay_meas -> GetValue()*1000))
-//                    Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
-//                    else
-//                    Sleep(sleep_time[sensor_resolution  -> GetSelection()]);
-
-                    accum_curr +=  sensor.Get_current();
-                    measurements++;
-                }
-
-
-                accum_light += accum_curr / static_cast<double>(measurements) - zero_correction;
-                sensor.Laser(LASER_OFF);
-                wxYield();
-
-            }
-
-
-            V_data.push_back(voltage);
-            I_data.push_back(accum_dark/static_cast<double>(pulse_numbers)); //  Get_ADC
-            P_data.push_back((accum_light - accum_dark)/static_cast<double>(pulse_numbers));
-            T_data.push_back(static_cast<double>(since(start_time).count())/1000.0);
-
-            // можно отображать и P_data и I_data?
-            // https://sourceforge.net/p/wxmathplot/discussion/297266/thread/9c3512d9a6/
-            frameworkVector -> SetData(V_data, I_data);
-            frameworkVector_photo -> SetData(V_data, P_data);
-
-
-
-        }
+        double edge_x = (stop - start) / 50.0;
+        if(start < stop)
+            framework_graph -> Fit(start - edge_x, stop + edge_x, *vMinmax.first, *vMinmax.second);
         else
-        {
-            Start_ADC_wait(res, static_cast<gain>(sensor_gain  -> GetSelection()));
-
-//            sensor.Start_ADC(res, static_cast<gain>(sensor_gain  -> GetSelection()));
-//            if((sleep_time[sensor_resolution -> GetSelection()]) < static_cast<int>(delay_meas -> GetValue()*1000))
-//            Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
-//            else
-//            Sleep(sleep_time[sensor_resolution  -> GetSelection()]);
-
-            V_data.push_back(voltage);
-            I_data.push_back(sensor.Get_current() - zero_correction); //  Get_ADC
-            T_data.push_back(static_cast<double>(since(start_time).count())/1000.0);
-
-            frameworkVector -> SetData(V_data, I_data);
-        }
-
-        framework_graph -> Fit();
-
-// //глючит вертикальное отображение когда кривая не растет, а падает, выглядит нормально если мышкой вызывать Fit...
-
-//        auto vMinmax = std::minmax_element(I_data.begin(), I_data.end(), compLess);
-//
-//        if(start < stop)
-//        framework_graph -> Fit(start - edge_x, stop + edge_x, *vMinmax.first, *vMinmax.second);
-//        else
-//        framework_graph -> Fit();
-//       // framework_graph -> Fit(stop + edge_x, start - edge_x, *vMinmax.second, *vMinmax.first);
+            framework_graph -> Fit(stop + edge_x, start - edge_x, *vMinmax.second, *vMinmax.first);
 
 
 
@@ -1150,24 +1022,21 @@ void interface_testFrame::Meas_start(wxCommandEvent &event)
         break;
     }
 
+    framework_graph -> Fit(); // иногда последний фит не срабатывает почему-то.
+
     sensor.Set_voltage(GATE, 0);
     sensor.Set_voltage(DRAIN, 0);
 
-    IV_meas_stop    -> Disable();
-    IV_meas_start   -> Enable();
-    if(photoelectric_mode -> GetValue() == 0)
-    {
-        IV_mode -> Enable();
-    }
-    photoelectric_mode      -> Enable();
+    iv_meas_stop    -> Disable();
+    iv_meas_start   -> Enable();
     transient_meas_start    -> Enable();
     measurementStop = FALSE;
 
 }
 
-void interface_testFrame::Meas_stop(wxCommandEvent &event)
+void interface_testFrame::IV_stop(wxCommandEvent &event)
 {
-    IV_meas_stop -> Disable();
+    iv_meas_stop -> Disable();
 
     measurementStop = TRUE;
 }
@@ -1185,8 +1054,8 @@ void interface_testFrame::Transient_start(wxCommandEvent &event)
 
     transient_meas_stop -> Enable();
     transient_meas_start -> Disable();
-    IV_mode -> Disable();
-    IV_meas_start -> Disable();
+    iv_mode -> Disable();
+    iv_meas_start -> Disable();
     measurementStop = FALSE;
 
 
@@ -1393,8 +1262,8 @@ Just create it as wxProgressDialog dlg("Heading", "Message", max) instead of usi
     SetTitle(wxString("IV measure – Data not saved"));
     transient_meas_stop -> Disable();
     transient_meas_start -> Enable();
-    IV_mode -> Enable();
-    IV_meas_start -> Enable();
+    iv_mode -> Enable();
+    iv_meas_start -> Enable();
     measurementStop = FALSE;
 
 
