@@ -49,11 +49,14 @@ public:
 
     double Get_current();
 
-    void Set_shunt(double);
-    double Get_shunt();
+//    void Set_shunt(double);
+//    double Get_shunt();
 
     void Set_zero_current(double);
     double Get_zero_current();
+
+    void Set_bias_corr(double);
+    double Get_bias_corr();
 
 // useless without laser
     void Laser(laser);
@@ -101,12 +104,13 @@ private:
 
     double gate_corr_coeff = 1.0; // 0.982;
     double drain_corr_coef = 1.0; // 0.898;
+    double bias_correction = 0;
 
     //  а как получилось что тут не надо на 2 умножать при введении смещения? потому что уже умножаем при расчете отсчетов ЦАП.
     double gate_gain = gate_corr_coeff * (1.0 + 24.0/3.9); // = 7.15
     double drain_gain =  drain_corr_coef * (1.0 + 4.7/3.9); // = 2.205
 
-    double r_shunt = 1.0; // Ohm
+//    double r_shunt = 1.0; // Ohm
 
     double drain_detection_coeff = 2.0;
     double drain_detection_gain = drain_detection_coeff * 0.5 * 24.0 * 8.2 / 5.0; // 19.68

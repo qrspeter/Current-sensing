@@ -49,7 +49,6 @@ SENSOR_FET sensor;
 std::vector <double> I_data;
 std::vector <double> V_data;
 std::vector <double> T_data;
-std::vector <double> P_data;
 
 const wxString ports[] = { wxT("COM1"), wxT("COM2"), wxT("COM3"), wxT("COM4"), wxT("COM5"), wxT("COM6"), wxT("COM7"), wxT("COM8"), wxT("COM9")};
 const wxString adc_resolution[] = { wxT("12 bit"), wxT("14 bit"), wxT("16 bit"), wxT("18 bit")};
@@ -442,26 +441,12 @@ void interface_testFrame::OnSaveAs(wxCommandEvent &event)
 
         if (fsave.is_open()) // если файл открыт
         {
-            if(P_data.empty())
+
+            fsave << "#Time (sec), Voltage (V), Current (A)" << std::endl; //
+            for(unsigned int i = 0; i < I_data.size(); i++) //
             {
-                fsave << "#Time (sec), Voltage (V), Current (A)" << std::endl; //
-                for(unsigned int i = 0; i < I_data.size(); i++) //
-                {
-                    fsave << T_data[i] << ", " << V_data[i] << ", " << I_data[i]/1000.0 << std::endl;
-                }
+                fsave << T_data[i] << ", " << V_data[i] << ", " << I_data[i]/1000.0 << std::endl;
             }
-            else
-            {
-                fsave << "#Time (sec), Voltage (V), Dark Current (mA), PhotoCurrent (A)" << std::endl; //
-                for(unsigned int i = 0; i < I_data.size(); i++) //
-                {
-                    fsave << T_data[i] << ", " << V_data[i] << ", " << I_data[i]/1000.0 << ", " << P_data[i]/1000.0 << std::endl;
-                }
-
-            }
-
-
-
 
             fsave.close();
             SetTitle(wxString("Data saved - ") << SaveDialog -> GetFilename());
@@ -496,31 +481,32 @@ void interface_testFrame::OnOpen(wxCommandEvent &event)
     {
         std::string myline;
         std::string word;
-        std::getline(fopen, myline);
+//        std::getline(fopen, myline);
 
         I_data.resize(0);
         V_data.resize(0);
         T_data.resize(0);
-        P_data.resize(0);
 
         while(std::getline(fopen, myline))
         {
 
+            if(myline[0] == '#') // // заголовок файла начинается с #
+                continue;
+
             std::stringstream str(myline); // https://java2blog.com/read-csv-file-in-cpp/, https://stackoverflow.com/questions/34218040/how-to-read-a-csv-file-data-into-an-array
-            std::getline(str, word, '\t');
+            std::getline(str, word, ',');
             T_data.push_back(std::stod(word, nullptr));
-            std::getline(str, word, '\t');
+            std::getline(str, word, ',');
             V_data.push_back(std::stod(word, nullptr));
-            std::getline(str, word, '\t');
-            I_data.push_back(std::stod(word, nullptr));
+            std::getline(str, word, ',');
+            I_data.push_back(1000 * std::stod(word, nullptr)); // A -> mA
 // std::stod    - Convert string to double https://cplusplus.com/reference/string/stod/
+
+
 
  // добавить с проверкой на получение ненулевого значения, а если нулевое - то ничего не делать.
 // хотя почему-то простая вставка без проверки ничего не выводит.. отложили на потом.
 // https://en.cppreference.com/w/cpp/string/basic_string/getline  - " If no characters were extracted for whatever reason (not even the discarded delimiter), getline sets failbit and returns"
-    //           std::getline(str, word, '\t');
-    //           P_data.push_back(std::stod(word, nullptr));
-
 
 
         }
@@ -532,6 +518,7 @@ void interface_testFrame::OnOpen(wxCommandEvent &event)
             wxMessageBox( wxT("File is empty"), wxT("Error"), wxOK | wxICON_INFORMATION);
             return;
         }
+
 
         SetTitle(wxString("Opened file - ") << openFileDialog -> GetFilename()); // SetTitle(wxString("Data saved - ") << SaveDialog->GetFilename());
 
@@ -547,37 +534,34 @@ void interface_testFrame::OnOpen(wxCommandEvent &event)
         framework_graph->AddLayer(frameworkVector);
 
         mpScaleY *scaleY = new mpScaleY(wxT("Current, mA"), mpALIGN_BOTTOM, true);
-
-        mpScaleX *scaleX = new mpScaleX(wxT("X"), mpALIGN_LEFT, true); // а тут надо как раз первую строку считывать
-
+        mpScaleX *scaleX = new mpScaleX(wxT("X"), mpALIGN_LEFT, true);
 
 
-//        if(V_data.begin() != V_data.back())  // or compare begin(),  and end()
- //       if( (V_data.begin() != V_data.back()) && (is_sorted(std::begin(V_data), std::end(V_data))) ) // || is_sorted(std::begin(V_data), std::end(V_data), std::greater<double>()))
-        if( (V_data[0] != V_data.back()) && (is_sorted(std::begin(V_data), std::end(V_data)) ||  is_sorted(std::begin(V_data), std::end(V_data), std::greater<double>()))) // ||
+// IV mode if V_data is strictly sorted, increasing or decreasing. is_sorted is not ehough
+// https://stackoverflow.com/questions/43219003/c-is-there-stl-algorithm-to-check-if-the-range-is-strictly-sorted
+        if( std::adjacent_find(V_data.begin(), V_data.end(), std::greater_equal<double>()) == V_data.end() || std::adjacent_find(V_data.begin(), V_data.end(), std::less_equal<double>()) == V_data.end()  )
         {
             frameworkVector -> SetData(V_data, I_data);
             scaleX -> SetName(wxT("Voltage, V"));
         }
-        else
+        else // Transient mode if T_data is strictly sorted
+        if(std::adjacent_find(T_data.begin(), T_data.end(), std::greater_equal<double>()) == T_data.end())
         {
             frameworkVector -> SetData(T_data, I_data);
             scaleX -> SetName(wxT("Time, T"));
 
         }
+        else{wxMessageBox( wxT("Unknown data format"), wxT("Open file"), wxOK | wxICON_INFORMATION); return;}
 
-        framework_graph->AddLayer(scaleX);
-        framework_graph->AddLayer(scaleY);
+
+        framework_graph -> AddLayer(scaleX);
+        framework_graph -> AddLayer(scaleY);
 
 
         framework_graph -> Fit();
 
     }
-    else
-    {
-        wxMessageBox( wxT("Can not open file"), wxT("Open file"), wxOK | wxICON_INFORMATION);
-
-    }
+    else{ wxMessageBox( wxT("Can not open file"), wxT("Open file"), wxOK | wxICON_INFORMATION);  }
 
 }
 
@@ -601,7 +585,7 @@ void interface_testFrame::Sensor_connect(wxCommandEvent &event)
 
             // change button label to Disconnect
             sensor_com_connect -> Enable();
-            sensor_com_connect->SetLabel("Disconnect");
+            sensor_com_connect -> SetLabel("Disconnect");
             sensor_com_choice -> Disable();
             iv_meas_start -> Enable();
             transient_meas_start -> Enable();
@@ -659,7 +643,7 @@ void interface_testFrame::OnSettingChange(wxCommandEvent &event)
     wxGridSizer *button_sizer = new wxGridSizer(1,2,3,3);
 
 
-    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("Zero correction")), 0, wxSHAPED);
+    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("Auto zero")), 0, wxSHAPED);
     wxCheckBox *zero_correction = new wxCheckBox(setting_panel, -1, wxT("Enable"));
     adjustment_sizer -> Add(zero_correction, 0, wxSHAPED);
     zero_correction ->  SetValue(sensor.GetZeroCorrMode());
@@ -673,6 +657,12 @@ void interface_testFrame::OnSettingChange(wxCommandEvent &event)
 //    averaging -> SetDigits(2);
 //    averaging -> SetIncrement(1);
 
+
+    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("Bias correction, V")), 0, wxSHAPED);
+    wxSpinCtrlDouble *bias_corr = new wxSpinCtrlDouble(setting_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -100, 100, sensor.Get_bias_corr(), 0.0, wxT("smth"));
+    bias_corr -> SetDigits(2);
+    bias_corr -> SetIncrement(0.01);
+    adjustment_sizer -> Add(bias_corr, 0, wxSHAPED);
 
     adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("DAC ref, V")), 0, wxSHAPED);
     wxSpinCtrlDouble *dac_ref_voltage = new wxSpinCtrlDouble(setting_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 0, sensor.GetDrainLimit(), sensor.Get_dac_ref(), 0.0, wxT("smth"));
@@ -698,17 +688,12 @@ void interface_testFrame::OnSettingChange(wxCommandEvent &event)
     gate_max -> SetIncrement(0.1);
     adjustment_sizer -> Add(gate_max, 0, wxSHAPED);
 
-    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("R shunt")), 0, wxSHAPED);
-    wxSpinCtrlDouble *r_shunt = new wxSpinCtrlDouble(setting_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 0, 10, sensor.Get_shunt(), 0.0, wxT("smth"));
-    r_shunt -> SetDigits(1);
-    r_shunt -> SetIncrement(0.1);
-    adjustment_sizer -> Add(r_shunt, 0, wxSHAPED);
+//    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("R shunt")), 0, wxSHAPED);
+//    wxSpinCtrlDouble *r_shunt = new wxSpinCtrlDouble(setting_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 0, 10, sensor.Get_shunt(), 0.0, wxT("smth"));
+//    r_shunt -> SetDigits(1);
+//    r_shunt -> SetIncrement(0.1);
+//    adjustment_sizer -> Add(r_shunt, 0, wxSHAPED);
 
-    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("Zero correction, mA")), 0, wxSHAPED);
-    wxSpinCtrlDouble *adc_zero = new wxSpinCtrlDouble(setting_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -100, 100, sensor.Get_zero_current(), 0.0, wxT("smth"));
-    adc_zero -> SetDigits(3);
-    adc_zero -> SetIncrement(0.001);
-    adjustment_sizer -> Add(adc_zero, 0, wxSHAPED);
 
     // idDAC_ref_voltage idOutput_v_max idOutput_v_min idADC_ref_voltage idADC_zero
 
@@ -739,12 +724,13 @@ void interface_testFrame::OnSettingChange(wxCommandEvent &event)
         // bias for Vgs and Vds
         sensor.SetZeroCorrMode(zero_correction -> GetValue());
         sensor.SetAveraging(averaging -> GetValue());
+        sensor.Set_bias_corr(bias_corr -> GetValue());
         sensor.Set_dac_ref(dac_ref_voltage  -> GetValue());
   //      sensor.Set_Vdd(output_v_max -> GetValue());
     //    sensor.Set_Vss(output_v_min -> GetValue());
    //     sensor.Set_adc_ref(adc_ref_voltage -> GetValue());
-        sensor.Set_shunt(r_shunt -> GetValue());
-        sensor.Set_zero_current(adc_zero -> GetValue());
+  //      sensor.Set_shunt(r_shunt -> GetValue());
+//        sensor.Set_zero_current(adc_zero -> GetValue());
         sensor.SetGateLimit(gate_max -> GetValue());
         sensor.SetDrainLimit(drain_max  -> GetValue());
 

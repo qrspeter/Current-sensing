@@ -184,7 +184,7 @@ int SENSOR_FET::Set_voltage(terminal  term, double voltage)
     if(voltage < -voltage_max)
         voltage = -voltage_max;
 
-    dac_count = static_cast<int16_t> (static_cast<double> (dac_counts) * 0.5 * ((voltage / voltage_gain) + dac_ref) / dac_ref);
+    dac_count = static_cast<int16_t> (static_cast<double> (dac_counts) * 0.5 * (((voltage + bias_correction) / voltage_gain) + dac_ref) / dac_ref);
     // нужна проверка на переполнение
     if(dac_count < 0)
         dac_count = 0;
@@ -310,7 +310,7 @@ double SENSOR_FET::Get_voltage()
         {
             MessageBox(NULL, "PurgeComm() failed!", "Error", MB_OK);
  //                  CloseHandle(hSerial);
-            return 0;
+            return std::nan("");
         }
 
         Reset();
@@ -359,7 +359,7 @@ double SENSOR_FET::Get_voltage()
     double result = adc_ref * static_cast<double>(raw_adc) / (1 * (static_cast<double> (adc_counts) / adc_correction)); // временно без коррекции на усиление ,а может так и пон€тнее будет....
 //    double result = adc_ref * ( 0x10000 * adc.meas_2 + 0x100 * adc.meas_1 + adc.meas_0) / (gain_correction * ((double) adc_counts / adc_correction));
 
-    return double(result);
+    return result;
 
 }
 
@@ -479,19 +479,19 @@ void SENSOR_FET::Set_ADC(resolution set_res, gain set_gain)
 */
 
 // useless in transimpedance config
-void SENSOR_FET::Set_shunt(double shunt)
-{
-    if( (shunt > 0) && (shunt < 10))
-        r_shunt = shunt;
-    else
-        Beep(223, 50);
-
-}
-
-double SENSOR_FET::Get_shunt()
-{
-    return r_shunt;
-}
+//void SENSOR_FET::Set_shunt(double shunt)
+//{
+//    if( (shunt > 0) && (shunt < 10))
+//        r_shunt = shunt;
+//    else
+//        Beep(223, 50);
+//
+//}
+//
+//double SENSOR_FET::Get_shunt()
+//{
+//    return r_shunt;
+//}
 
 void SENSOR_FET::Set_zero_current(double current)
 {
@@ -589,3 +589,7 @@ int SENSOR_FET::GetAveraging()
 {
     return averaging;
 }
+
+double SENSOR_FET::Get_bias_corr(){return bias_correction;}
+
+void SENSOR_FET::Set_bias_corr(double bias){bias_correction = bias;}
