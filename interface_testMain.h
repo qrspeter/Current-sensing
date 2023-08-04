@@ -104,7 +104,7 @@ class interface_testFrame: public wxFrame
         wxRadioBox *transient_mode;
 
         wxSpinCtrlDouble *trans_drain_bias;
-        wxSpinCtrlDouble *trans_gate_start;
+        wxSpinCtrlDouble *trans_gate_bias;
         wxSpinCtrlDouble *trans_gate_stop;
         wxSpinCtrlDouble *trans_gate_step;
         wxSpinCtrlDouble *trans_interval;

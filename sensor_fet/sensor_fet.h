@@ -104,11 +104,14 @@ private:
 
     double gate_corr_coeff = 1.0; // 0.982;
     double drain_corr_coef = 1.0; // 0.898;
-    double bias_correction = 0;
+//    double bias_correction = 0;
 
     //  а как получилось что тут не надо на 2 умножать при введении смещения? потому что уже умножаем при расчете отсчетов ЦАП.
     double gate_gain = gate_corr_coeff * (1.0 + 24.0/3.9); // = 7.15
     double drain_gain =  drain_corr_coef * (1.0 + 4.7/3.9); // = 2.205
+
+    double bias_correction = 0; // measured output voltage at 0V setting
+
 
 //    double r_shunt = 1.0; // Ohm
 

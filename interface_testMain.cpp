@@ -54,7 +54,7 @@ const wxString ports[] = { wxT("COM1"), wxT("COM2"), wxT("COM3"), wxT("COM4"), w
 const wxString adc_resolution[] = { wxT("12 bit"), wxT("14 bit"), wxT("16 bit"), wxT("18 bit")};
 const wxString adc_gain[] = { wxT("1x"), wxT("2x"), wxT("4x"), wxT("8x")};
 const wxString iv_modes[] = { wxT("Ids(Uds)"), wxT("Ids(Ugs)")};
-const wxString transient_modes[] = { wxT("Adjustment"), wxT("Lagger")};
+const wxString transient_modes[] = { wxT("On"), wxT("Off")};
 
 
 bool measurementStop{FALSE}; // Flag
@@ -215,7 +215,7 @@ interface_testFrame::interface_testFrame(wxFrame *frame, const wxString& title)
     control_sizer -> Add(new wxStaticText(framework_panel, -1, wxT("")), 0, wxEXPAND);
 
 
-    transient_mode = new wxRadioBox(framework_panel, idTransient_modes, wxT("Transient mode"), wxDefaultPosition, wxDefaultSize, 2, transient_modes, 0);
+    transient_mode = new wxRadioBox(framework_panel, idTransient_modes, wxT("Laser"), wxDefaultPosition, wxDefaultSize, 2, transient_modes, 0);
     control_sizer -> Add(transient_mode, 0, wxCENTER);
 
     control_sizer -> Add(wxTransient,      0, wxEXPAND, 0);
@@ -315,13 +315,13 @@ interface_testFrame::interface_testFrame(wxFrame *frame, const wxString& title)
     trans_drain_bias -> Bind(wxEVT_TEXT_ENTER, &OnSpinCtrlTextEnter, this);
     wxTransientGrid -> Add(trans_drain_bias, 0, wxSHAPED);
 
-/*    wxTransientGrid ->  Add(new wxStaticText(framework_panel, -1, wxT("Gate bias, V")), 0, wxSHAPED);
-    trans_gate_bias =   new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -1*gate_voltage_max, gate_voltage_max, 0.0, 0.0, wxT("smth"));
+    wxTransientGrid ->  Add(new wxStaticText(framework_panel, -1, wxT("Gate bias, V")), 0, wxSHAPED);
+    trans_gate_bias =   new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -1*sensor.GetGateLimit(), sensor.GetGateLimit(), 0.0, 0.0, wxT("smth"));
     trans_gate_bias -> SetDigits(1);
     trans_gate_bias -> SetIncrement(0.1);
     trans_gate_bias -> Bind(wxEVT_TEXT_ENTER, &OnSpinCtrlTextEnter, this);
     wxTransientGrid -> Add(trans_gate_bias, 0, wxSHAPED);
-*/
+
 /*    wxTransientGrid ->  Add(new wxStaticText(framework_panel, -1, wxT("Delay, s")), 0, wxSHAPED);
     trans_step =        new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 0, 1000, 0.0, 0.0, wxT("smth"));
     trans_step -> SetDigits(1);
@@ -333,28 +333,28 @@ interface_testFrame::interface_testFrame(wxFrame *frame, const wxString& title)
 */
 
 
-    wxTransientGrid ->  Add(new wxStaticText(framework_panel, -1, wxT("Gate start, V")), 0, wxSHAPED);
+/*    wxTransientGrid ->  Add(new wxStaticText(framework_panel, -1, wxT("Gate start, V")), 0, wxSHAPED);
     trans_gate_start =   new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -1*sensor.GetGateLimit(), sensor.GetGateLimit(), 0.0, 0.0, wxT("smth"));
     trans_gate_start -> SetDigits(1);
     trans_gate_start -> SetIncrement(0.1);
     trans_gate_start -> Bind(wxEVT_TEXT_ENTER, &OnSpinCtrlTextEnter, this);
     wxTransientGrid -> Add(trans_gate_start, 0, wxSHAPED);
-
-    wxTransientGrid ->  Add(new wxStaticText(framework_panel, -1, wxT("Gate stop, V")), 0, wxSHAPED);
+*/
+    wxTransientGrid ->  Add(new wxStaticText(framework_panel, -1, wxT("Pulse period, s")), 0, wxSHAPED);
     trans_gate_stop =   new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -1*sensor.GetGateLimit(), sensor.GetGateLimit(), 0.0, 0.0, wxT("smth"));
     trans_gate_stop -> SetDigits(1);
     trans_gate_stop -> SetIncrement(0.1);
     trans_gate_stop -> Bind(wxEVT_TEXT_ENTER, &OnSpinCtrlTextEnter, this);
     wxTransientGrid -> Add(trans_gate_stop, 0, wxSHAPED);
 
-    wxTransientGrid ->  Add(new wxStaticText(framework_panel, -1, wxT("Gate step, V")), 0, wxSHAPED);
+    wxTransientGrid ->  Add(new wxStaticText(framework_panel, -1, wxT("Pulse length")), 0, wxSHAPED);
     trans_gate_step =   new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -1*sensor.GetGateLimit(), sensor.GetGateLimit(), 1.0, 0.0, wxT("smth"));
     trans_gate_step -> SetDigits(1);
     trans_gate_step -> SetIncrement(0.1);
     trans_gate_step -> Bind(wxEVT_TEXT_ENTER, &OnSpinCtrlTextEnter, this);
     wxTransientGrid -> Add(trans_gate_step, 0, wxSHAPED);
 
-    wxTransientGrid ->  Add(new wxStaticText(framework_panel, -1, wxT("Interval, s")), 0, wxSHAPED);
+    wxTransientGrid ->  Add(new wxStaticText(framework_panel, -1, wxT("Pulse delay")), 0, wxSHAPED);
     trans_interval =   new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -1*sensor.GetGateLimit(), sensor.GetGateLimit(), 10.0, 0.0, wxT("smth"));
     trans_interval -> SetDigits(1);
     trans_interval -> SetIncrement(0.1);
@@ -442,10 +442,21 @@ void interface_testFrame::OnSaveAs(wxCommandEvent &event)
         if (fsave.is_open()) // если файл открыт
         {
 
-            fsave << "#Time (sec), Voltage (V), Current (A)" << std::endl; //
-            for(unsigned int i = 0; i < I_data.size(); i++) //
+            if(T_data.size()) // Transient data to save
             {
-                fsave << T_data[i] << ", " << V_data[i] << ", " << I_data[i]/1000.0 << std::endl;
+                fsave << "#Time (sec), Current (A), Voltage (V)" << std::endl; //
+                for(unsigned int i = 0; i < I_data.size(); ++i) //
+                {
+                    fsave << T_data[i] << "," << I_data[i] / 1000.0 << ","  << V_data[i] << std::endl;
+                }
+            }
+            else // IV data to save
+            {
+                fsave << "#Voltage (V), Current (A)" << std::endl; //
+                for(unsigned int i = 0; i < I_data.size(); ++i) //
+                {
+                    fsave << V_data[i] << "," << I_data[i] / 1000.0 << std::endl;
+                }
             }
 
             fsave.close();
@@ -480,36 +491,52 @@ void interface_testFrame::OnOpen(wxCommandEvent &event)
     if (fopen.is_open())
     {
         std::string myline;
-        std::string word;
-//        std::getline(fopen, myline);
 
         I_data.resize(0);
         V_data.resize(0);
         T_data.resize(0);
 
+        int ctr = -1;
+
         while(std::getline(fopen, myline))
         {
+            if(myline[0] == '#'){continue;}
 
-            if(myline[0] == '#') // // заголовок файла начинается с #
-                continue;
+            if(ctr == -1)
+            {
+                ctr = 0;
+                for (std::size_t i = 0; i < myline.length(); ++i) // / Example with C++23 size_t literal   for (auto i = 0uz; i != a.size(); ++i)
+                {
+                    if (myline[i] == ',')
+                        ++ctr;
+                }
+            }
 
+
+            std::string word;
             std::stringstream str(myline); // https://java2blog.com/read-csv-file-in-cpp/, https://stackoverflow.com/questions/34218040/how-to-read-a-csv-file-data-into-an-array
-            std::getline(str, word, ',');
-            T_data.push_back(std::stod(word, nullptr));
-            std::getline(str, word, ',');
-            V_data.push_back(std::stod(word, nullptr));
-            std::getline(str, word, ',');
-            I_data.push_back(1000 * std::stod(word, nullptr)); // A -> mA
-// std::stod    - Convert string to double https://cplusplus.com/reference/string/stod/
 
-
-
- // добавить с проверкой на получение ненулевого значения, а если нулевое - то ничего не делать.
-// хотя почему-то простая вставка без проверки ничего не выводит.. отложили на потом.
-// https://en.cppreference.com/w/cpp/string/basic_string/getline  - " If no characters were extracted for whatever reason (not even the discarded delimiter), getline sets failbit and returns"
-
-
+            if(ctr == 1)
+            {
+                std::getline(str, word, ',');
+                V_data.push_back(std::stod(word, nullptr));
+                std::getline(str, word, ',');
+                I_data.push_back(1000 * std::stod(word, nullptr)); // A -> mA
+            }
+        else
+            if(ctr == 2)
+            {
+                std::getline(str, word, ',');
+                T_data.push_back(std::stod(word, nullptr));
+                std::getline(str, word, ',');
+                I_data.push_back(1000 * std::stod(word, nullptr)); // A -> mA
+                std::getline(str, word, ',');
+                V_data.push_back(std::stod(word, nullptr));
+            }
+            else{wxMessageBox( wxT("Wrong column numbers"), wxT("Open file"), wxOK | wxICON_INFORMATION); return;}
         }
+
+
 
         fopen.close();
 
@@ -539,13 +566,20 @@ void interface_testFrame::OnOpen(wxCommandEvent &event)
 
 // IV mode if V_data is strictly sorted, increasing or decreasing. is_sorted is not ehough
 // https://stackoverflow.com/questions/43219003/c-is-there-stl-algorithm-to-check-if-the-range-is-strictly-sorted
-        if( std::adjacent_find(V_data.begin(), V_data.end(), std::greater_equal<double>()) == V_data.end() || std::adjacent_find(V_data.begin(), V_data.end(), std::less_equal<double>()) == V_data.end()  )
+
+//        )
+        if((ctr == 1) &&
+        (std::adjacent_find(V_data.begin(), V_data.end(), std::greater_equal<double>()) == V_data.end() || std::adjacent_find(V_data.begin(), V_data.end(), std::less_equal<double>()) == V_data.end()))
         {
+
+
             frameworkVector -> SetData(V_data, I_data);
             scaleX -> SetName(wxT("Voltage, V"));
         }
         else // Transient mode if T_data is strictly sorted
-        if(std::adjacent_find(T_data.begin(), T_data.end(), std::greater_equal<double>()) == T_data.end())
+//        if
+        if((ctr == 2) &&
+        (std::adjacent_find(T_data.begin(), T_data.end(), std::greater_equal<double>()) == T_data.end()))
         {
             frameworkVector -> SetData(T_data, I_data);
             scaleX -> SetName(wxT("Time, T"));
@@ -924,7 +958,7 @@ void interface_testFrame::IV_start(wxCommandEvent &event)
     V_data.resize(0);
     T_data.resize(0);
 
-    auto start_time = std::chrono::steady_clock::now();
+//    auto start_time = std::chrono::steady_clock::now();
 
 
     // сперва смещение, терминал определяется по состоянию переключателя. Выбор 0 - значит смещение на затвор, а сканирование на сток, 1 - наоборот.
@@ -948,7 +982,7 @@ void interface_testFrame::IV_start(wxCommandEvent &event)
 
     I_data.reserve(elements);
     V_data.reserve(elements);
-    T_data.reserve(elements);
+//    T_data.reserve(elements);
 
 
     resolution res = static_cast<resolution>(sensor_resolution  -> GetSelection());
@@ -986,7 +1020,7 @@ void interface_testFrame::IV_start(wxCommandEvent &event)
 
         V_data.push_back(voltage);
         I_data.push_back(sensor.Get_current() - zero_correction); //  Get_ADC
-        T_data.push_back(static_cast<double>(since(start_time).count()) / 1000.0);
+//        T_data.push_back(static_cast<double>(since(start_time).count()) / 1000.0);
 
         frameworkVector -> SetData(V_data, I_data);
 
@@ -1099,7 +1133,7 @@ void interface_testFrame::Transient_start(wxCommandEvent &event)
     {
         do
         {
-            sensor.Set_voltage(GATE, trans_gate_start -> GetValue());
+            sensor.Set_voltage(GATE, trans_gate_bias -> GetValue());
             sensor.Set_voltage(DRAIN, trans_drain_bias -> GetValue());
 
 
@@ -1115,7 +1149,7 @@ void interface_testFrame::Transient_start(wxCommandEvent &event)
 
             I_data.push_back(sensor.Get_current() - zero_correction); //  Get_ADC
             T_data.push_back(static_cast<double>(since(start_time).count())/1000.0);
-            V_data.push_back(trans_gate_start -> GetValue());
+            V_data.push_back(trans_gate_bias -> GetValue());
 
 
 
@@ -1148,94 +1182,94 @@ void interface_testFrame::Transient_start(wxCommandEvent &event)
         while(!measurementStop);
 
     }
-    else
-    {
-
-        int current_progress = 0;
-        wxProgressDialog *ProgressMeas = new wxProgressDialog (wxT("Progress"), wxT("Measuring..."), 100, NULL, wxPD_APP_MODAL|wxPD_AUTO_HIDE|wxPD_CAN_ABORT|wxPD_ELAPSED_TIME|wxPD_ESTIMATED_TIME|wxPD_REMAINING_TIME);
-
-
-/* https://docs.wxwidgets.org/trunk/classwx_generic_progress_dialog.html
-    wxProgressDialog dialog(...);
-    for ( int i = 0; i < 100; ++i ) {
-        if ( !dialog.Update(i)) {
-            // Cancelled by user.
-            break;
-        }
-
-        ... do something time-consuming (but not too much) ...
-    }
-*/
-
-/* or I will create a thread then. and how should I create dialogue on stack?
-Just create it as wxProgressDialog dlg("Heading", "Message", max) instead of using new to create it on the heap.
-
-*/
-
-        double start    = trans_gate_start -> GetValue();
-        double stop     = trans_gate_stop -> GetValue();
-        double step     = trans_gate_step -> GetValue();
-        double interval = trans_interval -> GetValue();
-
-        double scanDirection = 1.0;
-        if(start > stop)
-        {
-            scanDirection = -1.0;
-        }
-//        double edge_x = (stop - start)/50;
-
-        sensor.Set_voltage(DRAIN, trans_drain_bias -> GetValue());
-
-        for(double voltage = start; scanDirection * voltage <= scanDirection * stop + 0.0000000001;  voltage += scanDirection * step) // миллиарндая добавлена чтобы компенсировать набегание погрешности и окончания до последней точки
-        {
-          // Stop using wxProgressDialog now
-          //  if(measurementStop)
-          //  break;
-
-
-            // конвертировать меню в тип разрешения?
-            resolution res = (resolution) sensor_resolution  -> GetSelection();
-
-            auto start_interval = std::chrono::steady_clock::now();
-            do
-            {
-
-                sensor.Set_voltage(GATE, voltage);
-
-                Start_ADC_wait(res, static_cast<gain>(sensor_gain  -> GetSelection()));
-
-//                sensor.Start_ADC(res, static_cast<gain>(sensor_gain  -> GetSelection()));
-//                if( (sleep_time[sensor_resolution  -> GetSelection()]) < static_cast<int> (delay_meas -> GetValue()*1000))
-//                Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
-//                else
-//                Sleep(sleep_time[sensor_resolution  -> GetSelection()]);
-
-
-                V_data.push_back(voltage);
-                I_data.push_back(sensor.Get_current() - zero_correction); //  Get_ADC
-                T_data.push_back(static_cast<double>(since(start_time).count())/1000.0);
-
-
-                frameworkVector -> SetData(T_data, I_data);
-                framework_graph -> Fit();
-
-                wxYield();
-
-            }
-            while(static_cast<double>(since(start_interval).count())/1000.0 < interval);
-
-            current_progress = static_cast<int> (100.0 * voltage * scanDirection / (stop - start));
-            if ( !ProgressMeas -> Update(current_progress))
-            {
-                delete ProgressMeas;
-                break;
-
-            }
-
-
-        }
-
-    }
+//    else
+//    {
+//
+//        int current_progress = 0;
+//        wxProgressDialog *ProgressMeas = new wxProgressDialog (wxT("Progress"), wxT("Measuring..."), 100, NULL, wxPD_APP_MODAL|wxPD_AUTO_HIDE|wxPD_CAN_ABORT|wxPD_ELAPSED_TIME|wxPD_ESTIMATED_TIME|wxPD_REMAINING_TIME);
+//
+//
+///* https://docs.wxwidgets.org/trunk/classwx_generic_progress_dialog.html
+//    wxProgressDialog dialog(...);
+//    for ( int i = 0; i < 100; ++i ) {
+//        if ( !dialog.Update(i)) {
+//            // Cancelled by user.
+//            break;
+//        }
+//
+//        ... do something time-consuming (but not too much) ...
+//    }
+//*/
+//
+///* or I will create a thread then. and how should I create dialogue on stack?
+//Just create it as wxProgressDialog dlg("Heading", "Message", max) instead of using new to create it on the heap.
+//
+//*/
+//
+//        double start    = trans_gate_start -> GetValue();
+//        double stop     = trans_gate_stop -> GetValue();
+//        double step     = trans_gate_step -> GetValue();
+//        double interval = trans_interval -> GetValue();
+//
+//        double scanDirection = 1.0;
+//        if(start > stop)
+//        {
+//            scanDirection = -1.0;
+//        }
+////        double edge_x = (stop - start)/50;
+//
+//        sensor.Set_voltage(DRAIN, trans_drain_bias -> GetValue());
+//
+//        for(double voltage = start; scanDirection * voltage <= scanDirection * stop + 0.0000000001;  voltage += scanDirection * step) // миллиарндая добавлена чтобы компенсировать набегание погрешности и окончания до последней точки
+//        {
+//          // Stop using wxProgressDialog now
+//          //  if(measurementStop)
+//          //  break;
+//
+//
+//            // конвертировать меню в тип разрешения?
+//            resolution res = (resolution) sensor_resolution  -> GetSelection();
+//
+//            auto start_interval = std::chrono::steady_clock::now();
+//            do
+//            {
+//
+//                sensor.Set_voltage(GATE, voltage);
+//
+//                Start_ADC_wait(res, static_cast<gain>(sensor_gain  -> GetSelection()));
+//
+////                sensor.Start_ADC(res, static_cast<gain>(sensor_gain  -> GetSelection()));
+////                if( (sleep_time[sensor_resolution  -> GetSelection()]) < static_cast<int> (delay_meas -> GetValue()*1000))
+////                Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
+////                else
+////                Sleep(sleep_time[sensor_resolution  -> GetSelection()]);
+//
+//
+//                V_data.push_back(voltage);
+//                I_data.push_back(sensor.Get_current() - zero_correction); //  Get_ADC
+//                T_data.push_back(static_cast<double>(since(start_time).count())/1000.0);
+//
+//
+//                frameworkVector -> SetData(T_data, I_data);
+//                framework_graph -> Fit();
+//
+//                wxYield();
+//
+//            }
+//            while(static_cast<double>(since(start_interval).count())/1000.0 < interval);
+//
+//            current_progress = static_cast<int> (100.0 * voltage * scanDirection / (stop - start));
+//            if ( !ProgressMeas -> Update(current_progress))
+//            {
+//                delete ProgressMeas;
+//                break;
+//
+//            }
+//
+//
+//        }
+//
+//    }
 
 
 
