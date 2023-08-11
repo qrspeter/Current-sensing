@@ -6046,10 +6046,11 @@
 1647256077 e:\programming\fet_sensor\interface_test\interface_testapp.h
 	<wx/app.h>
 
-1691166012 e:\programming\fet_sensor\interface_test\interface_testmain.h
+1691757368 e:\programming\fet_sensor\interface_test\interface_testmain.h
 	<wx/wx.h>
 	"interface_testApp.h"
 	<wx/dialog.h>
+	<wx/string.h>
 	"mathplot/mathplot.h"
 	"mathplot/MathPlotConfig.h"
 	"sensor_fet/sensor_fet.h"
@@ -6086,15 +6087,16 @@
 	<wx/textctrl.h>
 	"mathplot.h"
 
-1691168927 e:\programming\fet_sensor\interface_test\sensor_fet\sensor_fet.h
+1691673813 e:\programming\fet_sensor\interface_test\sensor_fet\sensor_fet.h
 
-1691166301 source:e:\programming\fet_sensor\interface_test\interface_testmain.cpp
+1691764919 source:e:\programming\fet_sensor\interface_test\interface_testmain.cpp
 	"wx_pch.h"
 	"interface_testMain.h"
 	<wx/filename.h>
 	<wx/progdlg.h>
 	<vector>
 	<chrono>
+	<thread>
 	<fstream>
 	<sstream>
 	<algorithm>
