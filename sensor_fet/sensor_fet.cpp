@@ -80,7 +80,6 @@ int SENSOR_FET::Open(int port)
 	// DTR_CONTROL_DISABLE; // disable DTR to avoid reset SetCommState(m_hCom, &dcb);  https://forum.arduino.cc/t/disable-auto-reset-by-serial-connection/28248/12
 	// хотя ... это "Data terminal ready" https://docs.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-dcb
 
-    // Установка параметры порта.
 	if(!SetCommState(hSerial, &dcb))
 	{
 		MessageBox(NULL,"Port parameter error!", "Error", MB_OK);
@@ -117,7 +116,6 @@ int SENSOR_FET::Open(int port)
 	if(!ClearCommBreak(hSerial))
 	{
 
-
 		MessageBox(NULL, "ClearCommBreak() failed!", "Error", MB_OK);
 		CloseHandle(hSerial);
 		return(0);
@@ -139,9 +137,7 @@ int SENSOR_FET::Open(int port)
 
     }
 
-
 	return 1;
-
 }
 
 
@@ -150,7 +146,6 @@ int SENSOR_FET::Reset()
    WriteFile(hSerial, &resetSensor, sizeof(resetSensor), &bc, NULL);
 
    return 1;
-
 }
 
 int SENSOR_FET::Set_voltage(terminal  term, double voltage)
@@ -193,7 +188,6 @@ int SENSOR_FET::Set_voltage(terminal  term, double voltage)
         dac_count = dac_counts - 1;
 
 
-
     dac_voltage.voltage = dac_count;
 
     if(term == GATE)
@@ -207,12 +201,9 @@ int SENSOR_FET::Set_voltage(terminal  term, double voltage)
         WriteFile(hSerial, &setDAC_Drain, sizeof(setDAC_Drain), &bc, NULL);
         WriteFile(hSerial, &dac_voltage.volt_1, sizeof(dac_voltage.volt_1), &bc, NULL);
         WriteFile(hSerial, &dac_voltage.volt_0, sizeof(dac_voltage.volt_0), &bc, NULL);
-
     }
 
-
     return 1;
-
 }
 
 
@@ -259,13 +250,10 @@ void SENSOR_FET::Start_ADC(resolution bits,  gain gain_x, int channel)
     WriteFile(hSerial, &status, sizeof(status), &bc, NULL);
 
 
-
 }
 
 double SENSOR_FET::Get_voltage()
 {
-
-//    std::cout << "We are going to get ADC data" << std::endl;
 
     if(hSerial == INVALID_HANDLE_VALUE)
     {
@@ -281,7 +269,6 @@ double SENSOR_FET::Get_voltage()
 
         WriteFile(hSerial, &getADC, sizeof(getADC), &bc, NULL);
 
-        // ReadFile(hSerial, &adc18, sizeof(adc18), &bc, NULL);
         if(current_res == bit18)
         {
             ReadFile(hSerial, &adc.meas_2, 1, &bc, NULL);
@@ -298,9 +285,6 @@ double SENSOR_FET::Get_voltage()
         if(adc.meas_status  == expected_status)
             break;
 
-//        auto test = adc; //.meas_status;
-
-
         if(reRead > 1)
             return std::nan("");
 
@@ -309,13 +293,10 @@ double SENSOR_FET::Get_voltage()
         if(!PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR))
         {
             MessageBox(NULL, "PurgeComm() failed!", "Error", MB_OK);
- //                  CloseHandle(hSerial);
             return std::nan("");
         }
 
         Reset();
-
- //           wxYield();
 
         WriteFile(hSerial, &setADC, sizeof(setADC), &bc, NULL);
         WriteFile(hSerial, &status, sizeof(status), &bc, NULL);
@@ -328,8 +309,8 @@ double SENSOR_FET::Get_voltage()
 
 // both corrections equal 0 for 18 bit and x1 gain.  But smth is wrong exactly with 0.
 // may be better without static_cast and 0 power.
-    double adc_correction = std::pow(2.0, double(( 3.0 - static_cast<int>(current_res)) * 2.0)); // reduction of  ADC counts for 12-14-16 bit (to 18 bit)
-    double gain_correction = std::pow(2.0, double(static_cast<int>(current_gain))); // embedded ADC gain - 1-2-4-8.
+    double adc_res_correction = std::pow(2.0, double(( 3.0 - static_cast<int>(current_res)) * 2.0)); // reduction of  ADC counts for 12-14-16 bit (to 18 bit)
+    double adc_gain_correction = std::pow(2.0, double(static_cast<int>(current_gain))); // embedded ADC gain - 1-2-4-8.
 
 
 
@@ -356,7 +337,7 @@ double SENSOR_FET::Get_voltage()
 
 
 // Без коррекции на смещение нуля, только результат измерения АЦП:
-    double result = adc_ref * static_cast<double>(raw_adc) / (1 * (static_cast<double> (adc_counts) / adc_correction)); // временно без коррекции на усиление ,а может так и понятнее будет....
+    double result = adc_ref * static_cast<double>(raw_adc) / (1 * (static_cast<double> (adc_counts) / adc_res_correction)); // временно без коррекции на усиление ,а может так и понятнее будет....
 //    double result = adc_ref * ( 0x10000 * adc.meas_2 + 0x100 * adc.meas_1 + adc.meas_0) / (gain_correction * ((double) adc_counts / adc_correction));
 
     return result;
@@ -370,74 +351,12 @@ double SENSOR_FET::Get_current() // mA
     if(std::isnan(voltage))
     return std::nan("");
 
-    double current =  1000.0 * ( voltage ) / ( drain_detection_gain ) - drain_zero_current;
-//    double current = drain_zero_current + 1000 * ( ( voltage - adc_ref / 2.0) / r_shunt) / ( 2.0 * drain_current_gain ) ;
-//    double current =  1000 * ( voltage / r_shunt) / ( drain_detection_gain ) - drain_zero_current; // for high-side sensing
+    double current =  1000.0 * ( voltage ) / ( current_detection_gain );
 
     return current; // mA
 }
 
-/*
-double SENSOR_FET::Get_Vdd()
-{
-    return voltage_dd;
-}
 
-double SENSOR_FET::Get_Vss()
-{
-    return voltage_ss;
-}
-
-int SENSOR_FET::Set_Vdd(double Vdd)
-{
-    voltage_dd = Vdd;
-    return 1;
-}
-
-int SENSOR_FET::Set_Vss(double Vss)
-{
-    voltage_ss = Vss;
-    return 1;
-}
-*/
-
-//double SENSOR_FET::Get_voltage_drain_max()
-//{
-//    return voltage_drain_max;
-//}
-//
-//double SENSOR_FET::Get_voltage_gate_max()
-//{
-//    return voltage_gate_max;
-//}
-
-
-
-
-
-int SENSOR_FET::Set_dac_ref(double reference_V)
-{
-    dac_ref = reference_V;
-
-    return 1;
-}
-
-int SENSOR_FET::Set_adc_ref(double reference_V)
-{
-    adc_ref = reference_V;
-
-    return 1;
-}
-
-double SENSOR_FET::Get_adc_ref()
-{
-    return adc_ref;
-}
-
-double SENSOR_FET::Get_dac_ref()
-{
-    return dac_ref;
-}
 
 
 int SENSOR_FET::CheckState() // Возвращает да/нет, в зависимости от состояния подключения.
@@ -478,33 +397,15 @@ void SENSOR_FET::Set_ADC(resolution set_res, gain set_gain)
 }
 */
 
-// useless in transimpedance config
-//void SENSOR_FET::Set_shunt(double shunt)
-//{
-//    if( (shunt > 0) && (shunt < 10))
-//        r_shunt = shunt;
-//    else
-//        Beep(223, 50);
-//
-//}
-//
-//double SENSOR_FET::Get_shunt()
-//{
-//    return r_shunt;
-//}
-
-void SENSOR_FET::Set_zero_current(double current)
+void SENSOR_FET::Set_current_correction(double current)
 {
-    if( (current > -100) && (current < 100))
-        drain_zero_current = current;
-    else
-        Beep(223, 50);
+    current_correction = current;
 
 }
 
-double SENSOR_FET::Get_zero_current()
+double SENSOR_FET::Get_current_correction()
 {
-    return drain_zero_current;
+    return current_correction;
 }
 
 void SENSOR_FET::Laser(laser las)
@@ -593,3 +494,32 @@ int SENSOR_FET::GetAveraging()
 double SENSOR_FET::Get_bias_corr(){return bias_correction;}
 
 void SENSOR_FET::Set_bias_corr(double bias){bias_correction = bias;}
+
+
+// unused:
+
+
+int SENSOR_FET::Set_dac_ref(double reference_V)
+{
+    dac_ref = reference_V;
+
+    return 1;
+}
+
+int SENSOR_FET::Set_adc_ref(double reference_V)
+{
+    adc_ref = reference_V;
+
+    return 1;
+}
+
+double SENSOR_FET::Get_adc_ref()
+{
+    return adc_ref;
+}
+
+double SENSOR_FET::Get_dac_ref()
+{
+    return dac_ref;
+}
+

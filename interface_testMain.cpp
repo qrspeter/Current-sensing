@@ -32,7 +32,10 @@
 #include <thread>
 #include <fstream>
 #include <sstream> // std::stringstream
+#include <iomanip> // std::setprecision
 #include <algorithm> // is_sorted() in opening  file
+// #include <format> // https://stackoverflow.com/a/53966440  You can use C++20 std::format: std::string s = std::format("{:.2f}", 3.14159265359); // s == "3.14"
+
 
 
 //helper functions
@@ -654,11 +657,11 @@ void interface_testFrame::OnSettingChange(wxCommandEvent &event)
     bias_corr -> SetIncrement(0.01);
     adjustment_sizer -> Add(bias_corr, 0, wxSHAPED);
 
-    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("DAC ref, V")), 0, wxSHAPED);
-    wxSpinCtrlDouble *dac_ref_voltage = new wxSpinCtrlDouble(setting_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 0, sensor.GetDrainLimit(), sensor.Get_dac_ref(), 0.0, wxT("smth"));
-    adjustment_sizer -> Add(dac_ref_voltage, 0, wxSHAPED);
-    dac_ref_voltage -> SetDigits(2);
-    dac_ref_voltage -> SetIncrement(0.01);
+    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("Current correction")), 0, wxSHAPED);
+    wxSpinCtrlDouble *current_corr = new wxSpinCtrlDouble(setting_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -5.0, 5.0, sensor.Get_current_correction(), 0.0, wxT("smth"));
+    adjustment_sizer -> Add(current_corr, 0, wxSHAPED);
+    current_corr -> SetDigits(2);
+    current_corr -> SetIncrement(0.01);
 
 /*    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("Vds bias, V")), 0, wxSHAPED);
     wxSpinCtrlDouble *vds_bias = new wxSpinCtrlDouble(setting_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 0, drain_voltage_max, sensor.Get_dac_ref(), 0.0, wxT("smth"));
@@ -677,20 +680,6 @@ void interface_testFrame::OnSettingChange(wxCommandEvent &event)
     gate_max -> SetDigits(1);
     gate_max -> SetIncrement(0.1);
     adjustment_sizer -> Add(gate_max, 0, wxSHAPED);
-
-//    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("R shunt")), 0, wxSHAPED);
-//    wxSpinCtrlDouble *r_shunt = new wxSpinCtrlDouble(setting_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 0, 10, sensor.Get_shunt(), 0.0, wxT("smth"));
-//    r_shunt -> SetDigits(1);
-//    r_shunt -> SetIncrement(0.1);
-//    adjustment_sizer -> Add(r_shunt, 0, wxSHAPED);
-
-
-    // idDAC_ref_voltage idOutput_v_max idOutput_v_min idADC_ref_voltage idADC_zero
-
-
- //  iv_meas_start = new wxButton(setting_panel, idIV_start, wxT("Start"));
-
-//     sensor_com_connect = new wxButton(framework_panel, idSensor_connect, wxT("Connect"));
 
 
     wxButton* setting_OK = new wxButton(setting_panel, wxID_OK, "Ok"); // как совестить автоматическое закрывание окна и обработку данных?
@@ -714,7 +703,7 @@ void interface_testFrame::OnSettingChange(wxCommandEvent &event)
         sensor.SetZeroCorrMode(zero_correction -> GetValue());
         sensor.SetAveraging(averaging -> GetValue());
         sensor.Set_bias_corr(bias_corr -> GetValue());
-        sensor.Set_dac_ref(dac_ref_voltage  -> GetValue());
+        sensor.Set_current_correction(current_corr  -> GetValue());
   //      sensor.Set_Vdd(output_v_max -> GetValue());
     //    sensor.Set_Vss(output_v_min -> GetValue());
    //     sensor.Set_adc_ref(adc_ref_voltage -> GetValue());
@@ -1103,12 +1092,15 @@ void interface_testFrame::Transient_start(wxCommandEvent &event)
         Start_ADC_wait(res, static_cast<SENSOR_FET::gain>(sensor_gain  -> GetSelection()));
 
 
-        I_data.push_back(sensor.Get_current() - zero_correction); //  Get_ADC
+        I_data.push_back(sensor.Get_current() - zero_correction); //
         T_data.push_back(static_cast<double>(duration));
       //  T_data.push_back(static_cast<double>(since(start_time).count())/1000.0);
         V_data.push_back(trans_drain_bias -> GetValue());
 
-
+        std::ostringstream stm;
+        stm << std::fixed << std::setprecision(1) << static_cast<double>(sensor.Get_current() - zero_correction) << " mA, ";
+        stm << std::fixed << std::setprecision(2) << static_cast<double>(duration) << " seconds. ";
+        SetStatusText(stm.str(), 0);
 
         frameworkVector -> SetData(T_data, I_data);
         framework_graph -> Fit();
@@ -1123,15 +1115,19 @@ void interface_testFrame::Transient_start(wxCommandEvent &event)
     sensor.Set_voltage(SENSOR_FET::DRAIN, 0);
 
 
-
+    SetStatusText(_(" "),0);
 
     SetTitle(wxString("IV measure – Data not saved"));
     transient_meas_stop -> Disable();
     transient_meas_start -> Enable();
     transient_mode -> Enable();
-    trans_pulse_period -> Enable();
-    trans_pulse_length -> Enable();
-    trans_pulse_delay -> Enable();
+    if (transient_mode -> GetSelection() == 1)
+    {
+        trans_pulse_period -> Enable();
+        trans_pulse_length -> Enable();
+        trans_pulse_delay -> Enable();
+    }
+
     iv_mode -> Enable();
     iv_meas_start -> Enable();
     measurementStop = FALSE;

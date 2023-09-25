@@ -28,15 +28,11 @@ public:
 
 //    int Set_Vdd(double);
 //    int Set_Vss(double);
-    int Set_dac_ref(double);
-    int Set_adc_ref(double);
 //    double Get_Vdd();
 //    double Get_Vss();
 //    double Get_voltage_drain_max();
 //    double Get_voltage_gate_max();
 
-    double Get_dac_ref();
-    double Get_adc_ref();
     int CheckState(); // —читывание состо€ни€ счетчика, подключен (1)/отключен (0).
     void Start_ADC(resolution, gain, int channel = 0);
 
@@ -44,11 +40,8 @@ public:
 
     double Get_current();
 
-//    void Set_shunt(double);
-//    double Get_shunt();
-
-    void Set_zero_current(double);
-    double Get_zero_current();
+    void Set_current_correction(double);
+    double Get_current_correction();
 
     void Set_bias_corr(double);
     double Get_bias_corr();
@@ -69,11 +62,17 @@ public:
 
 
 
-
     void    SetZeroCorrMode(bool);
     bool    GetZeroCorrMode();
     void    SetAveraging(int);
     int     GetAveraging();
+
+// unused:
+    double Get_dac_ref();
+    double Get_adc_ref();
+    int Set_dac_ref(double);
+    int Set_adc_ref(double);
+
 
 private:
 
@@ -102,27 +101,24 @@ private:
 //    double bias_correction = 0;
 
     //  а как получилось что тут не надо на 2 умножать при введении смещени€? потому что уже умножаем при расчете отсчетов ÷јѕ.
-    double gate_gain = gate_corr_coeff * (1.0 + 24.0/3.9); // = 7.15
-    double drain_gain =  drain_corr_coef * (1.0 + 4.7/3.9); // = 2.205
+    double gate_gain = gate_corr_coeff * (1.0 + 24.0/3.9); // = 7.15 // equation for op amp
+    double drain_gain =  drain_corr_coef * (1.0 + 4.7/3.9); // = 2.205 // equation for op amp
 
-    double bias_correction = 0; // measured output voltage at 0V setting
+    double bias_correction = -0.3; // correction for output voltage at 0V setting
 
 
-//    double r_shunt = 1.0; // Ohm
-
-    double drain_detection_coeff = 2.0;
-    double drain_detection_gain = drain_detection_coeff * 0.5 * 24.0 * 8.2 / 5.0; // 19.68
+    double current_correction{1.088}; // real current = current_correction * (measured)
+    double current_detection_coeff = 2.0; // shifter divide voltage at half
+    double current_detection_gain = current_detection_coeff * 0.5 * 24.0 * 8.2 / (5.0 * current_correction); // 19.68 // based on nominals from detection part
 //    double drain_detection_gain = 0.5 * 390.0/5.0; // For high-side sensing 5000 / 50; //100.0; 0.5 *  умножение на входном усилителе х100, но по факту выходит *1000 )))
-    double drain_zero_current = 0; // 11.82; //9.6; // 0.498; // 0.997
+//    double drain_zero_current = 0; // 11.82; //9.6; // 0.498; // 0.997
 
     const int dac_counts = 4096; // 2^12
 
     const int adc_counts = 131072; // 2^18 если сигнал бипол€рный, 32768 дл€ 16бит, 8192 дл€ 14 бит, и 2048 дл€ 12 бит.
 
 
-//    resolution ADC_res  = bit18;
     resolution current_res{bit18};
-//    gain ADC_amp        = ;
     gain current_gain{x1};
 
     uint8_t status{0b10000100}; // 14-bit
@@ -162,30 +158,6 @@ private:
         uint8_t meas_0;
         uint8_t meas_status;
     } adc;
-    /*
-    union{
-      int32_t voltage;
-      struct{
-        uint8_t volt_3;
-        uint8_t volt_2;
-        uint8_t volt_1;
-        uint8_t volt_0;
-      };
-    } adc_voltage;
-
-    uint8_t adc_status;*/
-
-
-    /*
-    struct ADC_result
-    {
-        byte meas_2;
-        byte meas_1;
-        byte meas_0;
-        byte meas_status;
-    } adc;
-    */
-
 
 };
 
