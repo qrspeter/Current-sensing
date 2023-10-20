@@ -6,7 +6,7 @@
 /***************************************************************
  * Name:      interface_testMain.cpp
  * Purpose:   Code for Application Frame
- * Author:    Peter ()
+ * Author:    Peter Parfenov qrspeter@gmail.com
  * Created:   2022-03-14
  * Copyright: Peter ()
  * License:

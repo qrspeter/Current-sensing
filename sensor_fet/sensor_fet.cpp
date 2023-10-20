@@ -239,15 +239,16 @@ void SENSOR_FET::Start_ADC(resolution bits,  gain gain_x, int channel)
     status = 0b10000000 + 32 * channel + 4 * bits + gain_x;
     // 12-14-16-18 бит это b10000000-b10000100-b10001000-b10001100 (x80/x84/x88/x8C)
 
- //   if(averaging == 1)
-        WriteFile(hSerial, &setADC, sizeof(setADC), &bc, NULL);
+    WriteFile(hSerial, &setADC, sizeof(setADC), &bc, NULL);
+//    // когда доделаю КОП в контроллере, хотя проще программно где-то тут усреднять:
+//    if(averaging == 1)
+//        WriteFile(hSerial, &setADC, sizeof(setADC), &bc, NULL);
 //    else
-//    // когда доделаю КОП в контроллере
 //    {
 //        WriteFile(hSerial, &setADCav, sizeof(setADCav), &bc, NULL);
 //        WriteFile(hSerial, &averaging, sizeof(averaging), &bc, NULL); // // то есть КОП setADCav предполагает что мк запросит еще один байт
 //    }
-    WriteFile(hSerial, &status, sizeof(status), &bc, NULL);
+//    WriteFile(hSerial, &status, sizeof(status), &bc, NULL);
 
 
 }
