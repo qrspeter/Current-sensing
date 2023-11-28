@@ -1,10 +1,5 @@
-// идеи:
-// еще неплохо бы в лестничном режиме выводить текущее напр€жение на экран. Ќу или просто выделить два окошка текущего напр€жени€.
-
-
-
 /***************************************************************
- * Name:      interface_testMain.cpp
+ * Name:      current_sensingMain.cpp
  * Purpose:   Code for Application Frame
  * Author:    Peter Parfenov qrspeter@gmail.com
  * Created:   2022-03-14
@@ -21,7 +16,7 @@
 #pragma hdrstop
 #endif //__BORLANDC__
 
-#include "interface_testMain.h"
+#include "current_sensingMain.h"
 
 
 #include <wx/filename.h>
@@ -66,34 +61,34 @@ wxString wxbuildinfo(wxbuildinfoformat format)
     return wxbuild;
 }
 
-BEGIN_EVENT_TABLE(interface_testFrame, wxFrame)
-    EVT_CLOSE(interface_testFrame::OnClose)
-    EVT_MENU(idMenuSaveAs, interface_testFrame::OnSaveAs)
-    EVT_MENU(idMenuAbout, interface_testFrame::OnAbout)
-    EVT_MENU(idMenuQuit, interface_testFrame::OnQuit)
-    EVT_MENU(idMenuOpen, interface_testFrame::OnOpen)
+BEGIN_EVENT_TABLE(current_sensingFrame, wxFrame)
+    EVT_CLOSE(current_sensingFrame::OnClose)
+    EVT_MENU(idMenuSaveAs, current_sensingFrame::OnSaveAs)
+    EVT_MENU(idMenuAbout, current_sensingFrame::OnAbout)
+    EVT_MENU(idMenuQuit, current_sensingFrame::OnQuit)
+    EVT_MENU(idMenuOpen, current_sensingFrame::OnOpen)
 
-    EVT_MENU(idMenuSettingSave, interface_testFrame::OnSettingSave)
-    EVT_MENU(idMenuSettingChange, interface_testFrame::OnSettingChange)
-    EVT_MENU(idMenuSettingDefault, interface_testFrame::OnSettingDefault)
-    EVT_MENU(idMenuSettingLaser, interface_testFrame::OnSettingLaser)
+    EVT_MENU(idMenuSettingSave, current_sensingFrame::OnSettingSave)
+    EVT_MENU(idMenuSettingChange, current_sensingFrame::OnSettingChange)
+    EVT_MENU(idMenuSettingDefault, current_sensingFrame::OnSettingDefault)
+    EVT_MENU(idMenuSettingLaser, current_sensingFrame::OnSettingLaser)
 
-    EVT_BUTTON(idSensor_connect, interface_testFrame::Sensor_connect)
+    EVT_BUTTON(idSensor_connect, current_sensingFrame::Sensor_connect)
 
-    EVT_BUTTON(idIV_start, interface_testFrame::IV_start)
-    EVT_BUTTON(idIV_stop, interface_testFrame::IV_stop)
+    EVT_BUTTON(idIV_start, current_sensingFrame::IV_start)
+    EVT_BUTTON(idIV_stop, current_sensingFrame::IV_stop)
 
-    EVT_RADIOBOX(idIV_modes, interface_testFrame::IV_modes)
-//    EVT_CHECKBOX(idPhotoelectric_mode, interface_testFrame::Photoelectric_mode)
+    EVT_RADIOBOX(idIV_modes, current_sensingFrame::IV_modes)
+//    EVT_CHECKBOX(idPhotoelectric_mode, current_sensingFrame::Photoelectric_mode)
 
-    EVT_BUTTON(idTransient_start, interface_testFrame::Transient_start)
-    EVT_BUTTON(idTransient_stop, interface_testFrame::Transient_stop)
+    EVT_BUTTON(idTransient_start, current_sensingFrame::Transient_start)
+    EVT_BUTTON(idTransient_stop, current_sensingFrame::Transient_stop)
 
-    EVT_RADIOBOX(idTransient_modes, interface_testFrame::Transient_modes)
+    EVT_RADIOBOX(idTransient_modes, current_sensingFrame::Transient_modes)
 
     // проверить какое из них работает, так то нужна всего одна
-//    EVT_BUTTON(idSetting_OK, interface_testFrame::Setting_OK)
-//    EVT_BUTTON(wxID_OK, interface_testFrame::Setting_OK)
+//    EVT_BUTTON(idSetting_OK, current_sensingFrame::Setting_OK)
+//    EVT_BUTTON(wxID_OK, current_sensingFrame::Setting_OK)
 
 
 
@@ -101,7 +96,7 @@ END_EVENT_TABLE()
 
 
 
-interface_testFrame::interface_testFrame(wxFrame *frame, const wxString& title)
+current_sensingFrame::current_sensingFrame(wxFrame *frame, const wxString& title)
     : wxFrame(frame, -1, title)
 {
 
@@ -349,7 +344,7 @@ interface_testFrame::interface_testFrame(wxFrame *frame, const wxString& title)
 
 
 
-interface_testFrame::~interface_testFrame()
+current_sensingFrame::~current_sensingFrame()
 {
     if(sensor.CheckState())
     {
@@ -357,24 +352,24 @@ interface_testFrame::~interface_testFrame()
     }
 }
 
-void interface_testFrame::OnClose(wxCloseEvent &event)
+void current_sensingFrame::OnClose(wxCloseEvent &event)
 {
     Destroy();
 }
 
-void interface_testFrame::OnQuit(wxCommandEvent &event)
+void current_sensingFrame::OnQuit(wxCommandEvent &event)
 {
     Destroy();
 }
 
-void interface_testFrame::OnAbout(wxCommandEvent &event)
+void current_sensingFrame::OnAbout(wxCommandEvent &event)
 {
     wxString msg = wxbuildinfo(long_f);
     wxMessageBox(msg, _("Welcome to..."));
 }
 
 
-void interface_testFrame::OnSaveAs(wxCommandEvent &event)
+void current_sensingFrame::OnSaveAs(wxCommandEvent &event)
 {
 	if(V_data.empty())
 	{
@@ -436,7 +431,7 @@ void interface_testFrame::OnSaveAs(wxCommandEvent &event)
 
  }
 
-void interface_testFrame::OnOpen(wxCommandEvent &event)
+void current_sensingFrame::OnOpen(wxCommandEvent &event)
 {
 
     wxFileDialog *openFileDialog = new wxFileDialog(this, _("Open File..."), wxEmptyString, wxEmptyString, _("Comma Separated Files (*.csv)|*.csv|ASCII Files (*.asc)|*.asc*.csv|All Files (*.*)|*.*"), wxFD_OPEN|wxFD_FILE_MUST_EXIST, wxDefaultPosition);
@@ -558,7 +553,7 @@ void interface_testFrame::OnOpen(wxCommandEvent &event)
 
 }
 
-void interface_testFrame::Sensor_connect(wxCommandEvent &event)
+void current_sensingFrame::Sensor_connect(wxCommandEvent &event)
 {
 
    if(sensor.CheckState())
@@ -599,7 +594,7 @@ void interface_testFrame::Sensor_connect(wxCommandEvent &event)
 }
 
 
-void interface_testFrame::OnSettingChange(wxCommandEvent &event)
+void current_sensingFrame::OnSettingChange(wxCommandEvent &event)
 {
 
 // wxWidgets does show wxID_OK and wxID_CANCEL specially in the dialogs by default and provides built-in logic for standard behaviour.
@@ -719,7 +714,7 @@ void interface_testFrame::OnSettingChange(wxCommandEvent &event)
 }
 
 
-void interface_testFrame::OnSettingLaser(wxCommandEvent &event)
+void current_sensingFrame::OnSettingLaser(wxCommandEvent &event)
 {
     wxDialog *setting_change = new wxDialog(this, -1, _("Laser setting"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE, "dialogBox");
 
@@ -789,7 +784,7 @@ void interface_testFrame::OnSettingLaser(wxCommandEvent &event)
 // в идеале надо ловить другое - EVT_SPINCTRLDOUBLE(id, func):
 // Generated whenever the numeric value of the spin control is changed, that is, when the up/down spin button is clicked or when the control loses focus and the new value is different from the last one.
 
-void interface_testFrame::OnSpinCtrlTextEnter(wxCommandEvent& evt)
+void current_sensingFrame::OnSpinCtrlTextEnter(wxCommandEvent& evt)
 {
     wxWindow* win = dynamic_cast<wxWindow*>(evt.GetEventObject());
 
@@ -797,18 +792,18 @@ void interface_testFrame::OnSpinCtrlTextEnter(wxCommandEvent& evt)
 
 }
 
-void interface_testFrame::OnSettingSave(wxCommandEvent& evt)
+void current_sensingFrame::OnSettingSave(wxCommandEvent& evt)
 {
     Beep(523,50);
 }
 
 
-void interface_testFrame::OnSettingDefault(wxCommandEvent& evt)
+void current_sensingFrame::OnSettingDefault(wxCommandEvent& evt)
 {
     Beep(523,50);
 }
 
-void interface_testFrame::Transient_modes(wxCommandEvent& evt)
+void current_sensingFrame::Transient_modes(wxCommandEvent& evt)
 {
     if (transient_mode -> GetSelection() == 0)
     {
@@ -826,7 +821,7 @@ void interface_testFrame::Transient_modes(wxCommandEvent& evt)
 
 }
 
-void interface_testFrame::IV_modes(wxCommandEvent& evt)
+void current_sensingFrame::IV_modes(wxCommandEvent& evt)
 {
     if (iv_mode -> GetSelection() == 0)
     {
@@ -851,7 +846,7 @@ void interface_testFrame::IV_modes(wxCommandEvent& evt)
 // Measurements
 // ===============================================================================================
 
-void interface_testFrame::Start_ADC_wait(SENSOR_FET::resolution res, SENSOR_FET::gain gain_x)
+void current_sensingFrame::Start_ADC_wait(SENSOR_FET::resolution res, SENSOR_FET::gain gain_x)
 {
     sensor.Start_ADC(res, gain_x);
 
@@ -863,7 +858,7 @@ void interface_testFrame::Start_ADC_wait(SENSOR_FET::resolution res, SENSOR_FET:
 }
 
 
-void interface_testFrame::IV_start(wxCommandEvent &event)
+void current_sensingFrame::IV_start(wxCommandEvent &event)
 {
     if(!sensor.CheckState())
     {
@@ -990,14 +985,14 @@ void interface_testFrame::IV_start(wxCommandEvent &event)
 
 }
 
-void interface_testFrame::IV_stop(wxCommandEvent &event)
+void current_sensingFrame::IV_stop(wxCommandEvent &event)
 {
     iv_meas_stop -> Disable();
 
     measurementStop = TRUE;
 }
 
-void interface_testFrame::Transient_start(wxCommandEvent &event)
+void current_sensingFrame::Transient_start(wxCommandEvent &event)
 {
 
     if(!sensor.CheckState())
@@ -1134,7 +1129,7 @@ void interface_testFrame::Transient_start(wxCommandEvent &event)
 
 
 }
-void interface_testFrame::Transient_stop(wxCommandEvent &event)
+void current_sensingFrame::Transient_stop(wxCommandEvent &event)
 {
     transient_meas_stop -> Disable();
 

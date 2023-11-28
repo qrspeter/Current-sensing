@@ -1,5 +1,5 @@
 /***************************************************************
- * Name:      interface_testApp.h
+ * Name:      current_sensingApp.h
  * Purpose:   Defines Application Class
  * Author:    Peter ()
  * Created:   2022-03-14
@@ -7,15 +7,15 @@
  * License:
  **************************************************************/
 
-#ifndef INTERFACE_TESTAPP_H
-#define INTERFACE_TESTAPP_H
+#ifndef CURRENT_SENSINGAPP_H
+#define CURRENT_SENSINGAPP_H
 
 #include <wx/app.h>
 
-class interface_testApp : public wxApp
+class current_sensingApp : public wxApp
 {
     public:
         virtual bool OnInit();
 };
 
-#endif // INTERFACE_TESTAPP_H
+#endif // CURRENT_SENSINGAPP_H

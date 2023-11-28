@@ -1,5 +1,5 @@
 /***************************************************************
- * Name:      interface_testMain.h
+ * Name:      current_sensingMain.h
  * Purpose:   Defines Application Frame
  * Author:    Peter ()
  * Created:   2022-03-14
@@ -7,14 +7,14 @@
  * License:
  **************************************************************/
 
-#ifndef INTERFACE_TESTMAIN_H
-#define INTERFACE_TESTMAIN_H
+#ifndef CURRENT_SENSINGMAIN_H
+#define CURRENT_SENSINGMAIN_H
 
 #ifndef WX_PRECOMP
     #include <wx/wx.h>
 #endif
 
-#include "interface_testApp.h"
+#include "current_sensingApp.h"
 
 #include <wx/dialog.h>
 #include <wx/string.h>
@@ -24,11 +24,11 @@
 
 #include "sensor_fet/sensor_fet.h"
 
-class interface_testFrame: public wxFrame
+class current_sensingFrame: public wxFrame
 {
     public:
-        interface_testFrame(wxFrame *frame, const wxString& title);
-        ~interface_testFrame();
+        current_sensingFrame(wxFrame *frame, const wxString& title);
+        ~current_sensingFrame();
     private:
 
         std::vector <double> I_data;
@@ -137,4 +137,4 @@ class interface_testFrame: public wxFrame
 
 
 
-#endif // INTERFACE_TESTMAIN_H
+#endif // CURRENT_SENSINGMAIN_H

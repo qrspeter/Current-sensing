@@ -1,5 +1,5 @@
 /***************************************************************
- * Name:      interface_testApp.cpp
+ * Name:      current_sensingApp.cpp
  * Purpose:   Code for Application Class
  * Author:    Peter ()
  * Created:   2022-03-14
@@ -15,19 +15,19 @@
 #pragma hdrstop
 #endif //__BORLANDC__
 
-#include "interface_testApp.h"
-#include "interface_testMain.h"
+#include "current_sensingApp.h"
+#include "current_sensingMain.h"
 
 #include "sensor_fet/sensor_fet.h"
 
-IMPLEMENT_APP(interface_testApp);
+IMPLEMENT_APP(current_sensingApp);
 
 
-bool interface_testApp::OnInit()
+bool current_sensingApp::OnInit()
 {
-    interface_testFrame* frame = new interface_testFrame(0L, _("Test sensor interface"));
+    current_sensingFrame* frame = new current_sensingFrame(0L, _("Test sensor interface"));
     frame->SetIcon(wxICON(aaaa)); // To Set App Icon
-    frame->SetSize( 1000, 720);
+    frame->SetSize( 1000, 750);
     frame->Show();
 
     return true;
