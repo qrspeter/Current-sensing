@@ -10,7 +10,7 @@ For a current-sensing project Using Codeblocks-20.03 / MinGW-W64-builds-4.3.5 / 
 ![Interface](interface.png)
 
 
-![Appearance](./scheme/appearance.jpg)
+![Appearance](./scheme/appearance.JPG)
 
 
 This work was supported by the Ministry of Science and Higher Education of the Russian Federation, goszаdanie no.
