@@ -44,7 +44,7 @@ int SENSOR_FET::Open(int port)
 		return(0);
 	}
 
-    com_port = port;
+    com_port_ = port;
 
     com_name[3] = static_cast<char>(port + 0x30);
 
@@ -164,13 +164,13 @@ int SENSOR_FET::Set_voltage(terminal  term, double voltage)
     double voltage_max;
     if(term == GATE)
     {
-        voltage_gain = gate_gain;
-        voltage_max = gate_limit;
+        voltage_gain = gate_gain_;
+        voltage_max = gate_limit_;
     }
     else
     {
-        voltage_gain = drain_gain;
-        voltage_max = drain_limit;
+        voltage_gain = drain_gain_;
+        voltage_max = drain_limit_;
     }
 
     if(voltage > voltage_max)
@@ -179,7 +179,7 @@ int SENSOR_FET::Set_voltage(terminal  term, double voltage)
     if(voltage < -voltage_max)
         voltage = -voltage_max;
 
-    dac_count = static_cast<int16_t> (static_cast<double> (dac_counts) * 0.5 * (((voltage + bias_correction) / voltage_gain) + dac_ref) / dac_ref);
+    dac_count = static_cast<int16_t> (static_cast<double> (dac_counts) * 0.5 * (((voltage + bias_correction_) / voltage_gain) + dac_ref_) / dac_ref_);
     // нужна проверка на переполнение
     if(dac_count < 0)
         dac_count = 0;
@@ -338,7 +338,7 @@ double SENSOR_FET::Get_voltage()
 
 
 // Без коррекции на смещение нуля, только результат измерения АЦП:
-    double result = adc_ref * static_cast<double>(raw_adc) / (1 * (static_cast<double> (adc_counts) / adc_res_correction)); // временно без коррекции на усиление ,а может так и понятнее будет....
+    double result = adc_ref_ * static_cast<double>(raw_adc) / (1 * (static_cast<double> (adc_counts) / adc_res_correction)); // временно без коррекции на усиление ,а может так и понятнее будет....
 //    double result = adc_ref * ( 0x10000 * adc.meas_2 + 0x100 * adc.meas_1 + adc.meas_0) / (gain_correction * ((double) adc_counts / adc_correction));
 
     return result;
@@ -379,7 +379,7 @@ void SENSOR_FET::Close()
 
 int SENSOR_FET::GetPortNumber()
 {
-    return com_port;
+    return com_port_;
 }
 
 /*
@@ -398,15 +398,15 @@ void SENSOR_FET::Set_ADC(resolution set_res, gain set_gain)
 }
 */
 
-void SENSOR_FET::Set_current_correction(double current)
+void SENSOR_FET::Set_current_correction(double current_correction)
 {
-    current_correction = current;
+    current_correction_ = current_correction;
 
 }
 
 double SENSOR_FET::Get_current_correction()
 {
-    return current_correction;
+    return current_correction_;
 }
 
 void SENSOR_FET::Laser(laser las)
@@ -418,109 +418,109 @@ void SENSOR_FET::Laser(laser las)
 
 }
 
-void SENSOR_FET::SetPulseDuraion(double duration)
+void SENSOR_FET::SetPulseDuraion(double pulse_duration)
 {
-    pulse_duration = duration;
+    pulse_duration_ = pulse_duration;
 }
 
-void SENSOR_FET::SetPulseNumbers(int numbers)
+void SENSOR_FET::SetPulseNumbers(int pulse_numbers)
 {
-    pulse_numbers = numbers;
+    pulse_numbers_ = pulse_numbers;
 }
 
 double SENSOR_FET::GetPulseDuraion()
 {
-    return pulse_duration;
+    return pulse_duration_;
 }
 
 int SENSOR_FET::GetPulseNumbers()
 {
-    return pulse_numbers;
+    return pulse_numbers_;
 }
 
-void SENSOR_FET::SetPulseDelay(double delay)
+void SENSOR_FET::SetPulseDelay(double pulse_delay)
 {
-    pulse_delay = delay;
+    pulse_delay_ = pulse_delay;
 }
 
 double SENSOR_FET::GetPulseDelay()
 {
-    return pulse_delay;
+    return pulse_delay_;
 }
 
-void SENSOR_FET::SetDrainLimit(double limit)
+void SENSOR_FET::SetDrainLimit(double drain_limit)
 {
-    drain_limit = limit;
+    drain_limit_ = drain_limit;
 }
 
 double SENSOR_FET::GetDrainLimit()
 {
-    return drain_limit;
+    return drain_limit_;
 }
 
-void SENSOR_FET::SetGateLimit(double limit)
+void SENSOR_FET::SetGateLimit(double gate_limit)
 {
-    gate_limit = limit;
+    gate_limit_ = gate_limit;
 }
 
 double SENSOR_FET::GetGateLimit()
 {
-    return gate_limit;
+    return gate_limit_;
 }
 
 
-void SENSOR_FET::SetZeroCorrMode(bool corr)
+void SENSOR_FET::SetZeroCorrMode(bool zero_corr)
 {
-    zero_corr = corr;
+    zero_corr_ = zero_corr;
 }
 
 bool SENSOR_FET::GetZeroCorrMode()
 {
-    return zero_corr;
+    return zero_corr_;
 }
 
 
-void SENSOR_FET::SetAveraging(int aver)
+void SENSOR_FET::SetAveraging(int averaging)
 {
-    if( (aver <= 64) && (aver > 0))
-        averaging = static_cast<uint8_t>(aver);
+    if( (averaging <= 64) && (averaging > 0))
+        averaging_ = static_cast<uint8_t>(averaging);
 
 }
 
 int SENSOR_FET::GetAveraging()
 {
-    return averaging;
+    return averaging_;
 }
 
-double SENSOR_FET::Get_bias_corr(){return bias_correction;}
+double SENSOR_FET::Get_bias_corr(){return bias_correction_;}
 
-void SENSOR_FET::Set_bias_corr(double bias){bias_correction = bias;}
+void SENSOR_FET::Set_bias_corr(double bias_correction){bias_correction_ = bias_correction;}
 
 
 // unused:
 
 
-int SENSOR_FET::Set_dac_ref(double reference_V)
+int SENSOR_FET::Set_dac_ref(double dac_ref)
 {
-    dac_ref = reference_V;
+    dac_ref_ = dac_ref;
 
     return 1;
 }
 
-int SENSOR_FET::Set_adc_ref(double reference_V)
+int SENSOR_FET::Set_adc_ref(double adc_ref)
 {
-    adc_ref = reference_V;
+    adc_ref_ = adc_ref;
 
     return 1;
 }
 
 double SENSOR_FET::Get_adc_ref()
 {
-    return adc_ref;
+    return adc_ref_;
 }
 
 double SENSOR_FET::Get_dac_ref()
 {
-    return dac_ref;
+    return dac_ref_;
 }
 
