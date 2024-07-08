@@ -1,10 +1,10 @@
 /**
- *  ГЎГЁГЎГ«ГЁГ®ГІГҐГЄГ  ГґГіГ­ГЄГ¶ГЁГ© Г°Г ГЎГ®ГІГ» Г± Г±ГҐГ­Г±Г®Г°Г®Г¬.
- *  Г“Г±ГІГ Г­Г ГўГ«ГЁГўГ ГҐГІ Г­Г ГЇГ°ГїГ¦ГҐГ­ГЁГҐ Г¤ГўГіГµ Г–ГЂГЏ (Г§Г ГІГўГ®Г° ГЁ Г±ГІГ®ГЄ), ГЄГ®Г­ГўГҐГ°ГІГЁГ°ГіГї Г­Г ГЇГ°ГїГ¦ГҐГ­ГЁГҐ double Гў Г®ГІГ±Г·ГҐГІГ» Г–ГЂГЏ.
- *  Г‡Г ГЇГіГ±ГЄГ ГҐГІ ГЂГ–ГЏ ГЁ Г§Г Г¤Г ГҐГІ ГҐГЈГ® Г­Г Г±ГІГ°Г®Г©ГЄГЁ (ГўГ»ГЎГ®Г° ГЂГ–ГЏ, Г°Г Г§Г°ГїГ¤Г­Г®Г±ГІГј, ГіГ±ГЁГ«ГҐГ­ГЁГҐ)
- *  Г‘Г·ГЁГІГ»ГўГ ГҐГІ Г®ГІГ±Г·ГҐГІГ» ГЂГ–ГЏ ГЁ ГЄГ®Г­ГўГҐГ°ГІГЁГ°ГіГҐГІ ГЁГµ Гў Г­Г ГЇГ°ГїГ¦ГҐГ­ГЁГҐ (ГµГ®ГІГї Г­Г Г¬ Г­ГіГ¦ГҐГ­ ГЎГіГ¤ГҐГІ ГІГ®ГЄ).
- *  Г‚ГЄГ«ГѕГ·Г ГҐГІ-ГўГ»ГЄГ«ГѕГ·Г ГҐГІ Г«Г Г§ГҐГ° Г·ГҐГ°ГҐГ§ Г¶ГЁГґГ°Г®ГўГ®Г© ГўГ»ГўГ®Г¤ ГЂГ°Г¤ГіГЁГ­Г®.
- *  ГЂ ГІГ ГЄГ¦ГҐ ГіГ±ГІГ Г­Г ГўГ«ГЁГўГ ГҐГІ ГЄГ®Г­Г±ГІГ Г­ГІГ» ГЇГҐГ°ГҐГ±Г·ГҐГІГ  Г®ГІГ±Г·ГҐГІГ®Гў Гў Г­Г ГЇГ°ГїГ¦ГҐГ­ГЁГҐ ГЁ Г®ГЎГ°Г ГІГ­Г®.
+ *  библиотека функций работы с сенсором.
+ *  Устанавливает напряжение двух ЦАП (затвор и сток), конвертируя напряжение double в отсчеты ЦАП.
+ *  Запускает АЦП и задает его настройки (выбор АЦП, разрядность, усиление)
+ *  Считывает отсчеты АЦП и конвертирует их в напряжение (хотя нам нужен будет ток).
+ *  Включает-выключает лазер через цифровой вывод Ардуино.
+ *  А также устанавливает константы пересчета отсчетов в напряжение и обратно.
  *
  */
 
@@ -12,7 +12,7 @@
 
 
 #include <iostream>
-//#include <wx/filename.h> // Г¤Г«Гї wxYield
+//#include <wx/filename.h> // для wxYield
 
 #include <windows.h>
 #include <string>
@@ -50,7 +50,7 @@ int SENSOR_FET::Open(int port)
 
     hSerial = CreateFileA((LPCSTR)com_name, GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
 
-	if(hSerial == INVALID_HANDLE_VALUE) // ГЇГ°Г®ГўГҐГ°ГЄГ  ГўГ»Г¤ГҐГ«ГҐГ­ГЁГї ГЇГ®Г°ГІГ . NULL for 32-bit Win and INVALID_HANDLE_VALUE for 64bit
+	if(hSerial == INVALID_HANDLE_VALUE) // проверка выделения порта. NULL for 32-bit Win and INVALID_HANDLE_VALUE for 64bit
 	{
 	    if(GetLastError() == ERROR_FILE_NOT_FOUND)
         MessageBox(NULL, "COM port is not found", "Error", MB_OK);
@@ -59,7 +59,7 @@ int SENSOR_FET::Open(int port)
 		return(0);
 	}
 
-	SetupComm(hSerial, INPUT_BUFF_SIZE, INPUT_BUFF_SIZE); // Г§Г Г¤Г Г­ГЁГҐ Г°Г Г§Г¬ГҐГ°Г®Гў ГЎГіГґГҐГ°Г  ГЇГ®Г°ГІГ .
+	SetupComm(hSerial, INPUT_BUFF_SIZE, INPUT_BUFF_SIZE); // задание размеров буфера порта.
 
 
 	DCB dcb; //  = {0}
@@ -75,10 +75,10 @@ int SENSOR_FET::Open(int port)
 	dcb.ByteSize    = 8;
 	dcb.Parity      = NOPARITY;
 	dcb.StopBits    = ONESTOPBIT;
-	dcb.fDtrControl = DTR_CONTROL_ENABLE; // ГЁГ­Г Г·ГҐ Г°Г ГЎГ®ГІГ ГҐГІ ГІГ®Г«ГјГЄГ® ГЇГ®Г±Г«ГҐ ГўГЄГ«ГѕГ·ГҐГ­ГЁГї ГІГҐГ°Г¬ГЁГ­Г Г«Г  ГЇГ®Г°ГІГ , ГЁГ¤ГҐГї Г®ГІГ±ГѕГ¤Г  https://github.com/dmicha16/simple_serial_port/blob/master/simple-serial-port/simple-serial-port/SimpleSerial.cpp
-	// ГµГ®ГІГї Г±ГІГ°Г Г­Г­Г®, ГЇГ Г°Г Г¬ГҐГІГ° Г®ГІГўГҐГ·Г ГҐГІ Г§Г  Г±ГЎГ°Г®Г± ГЇГ°ГЁ ГўГЄГ«ГѕГ·ГҐГ­ГЁГЁ
+	dcb.fDtrControl = DTR_CONTROL_ENABLE; // иначе работает только после включения терминала порта, идея отсюда https://github.com/dmicha16/simple_serial_port/blob/master/simple-serial-port/simple-serial-port/SimpleSerial.cpp
+	// хотя странно, параметр отвечает за сброс при включении
 	// DTR_CONTROL_DISABLE; // disable DTR to avoid reset SetCommState(m_hCom, &dcb);  https://forum.arduino.cc/t/disable-auto-reset-by-serial-connection/28248/12
-	// ГµГ®ГІГї ... ГЅГІГ® "Data terminal ready" https://docs.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-dcb
+	// хотя ... это "Data terminal ready" https://docs.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-dcb
 
 	if(!SetCommState(hSerial, &dcb))
 	{
@@ -180,7 +180,7 @@ int SENSOR_FET::Set_voltage(terminal  term, double voltage)
         voltage = -voltage_max;
 
     dac_count = static_cast<int16_t> (static_cast<double> (dac_counts) * 0.5 * (((voltage + bias_correction_) / voltage_gain) + dac_ref_) / dac_ref_);
-    // Г­ГіГ¦Г­Г  ГЇГ°Г®ГўГҐГ°ГЄГ  Г­Г  ГЇГҐГ°ГҐГЇГ®Г«Г­ГҐГ­ГЁГҐ
+    // нужна проверка на переполнение
     if(dac_count < 0)
         dac_count = 0;
 
@@ -211,9 +211,9 @@ int SENSOR_FET::Set_voltage(terminal  term, double voltage)
 void SENSOR_FET::Start_ADC(resolution bits,  gain gain_x, int channel)
 {
 
-// Г¤Г®ГЎГ ГўГЁГІГј ГіГ±Г°ГҐГ¤Г­ГҐГ­ГЁГҐ Гў Г§Г ГЇГ°Г®Г±...  ГЁ ГЇГ®ГІГ®Г¬ Гў ГЉГЋГЏ
+// добавить усреднение в запрос...  и потом в КОП
 
-// Г±ГЎГ°Г Г±Г»ГўГ ГҐГ¬, ГІ.ГЄ. ГЁГ­Г®ГЈГ¤Г  ГЎГ Г©ГІГ» ГЄГіГ¤Г -ГІГ® ГІГҐГ°ГїГѕГІГ±Гї ГЁ Г±ГЄГ Г·ГЄГЁ ГЇГ°Г®ГЁГ±ГµГ®Г¤ГїГІ Г±ГІГіГЇГҐГ­ГјГЄГ®Г©, Г  ГІГ ГЄ ГµГ®ГІГј Г°Г Г§Г®ГўГ»Г¬ ГўГ»ГЎГ°Г®Г±Г®Г¬.
+// сбрасываем, т.к. иногда байты куда-то теряются и скачки происходят ступенькой, а так хоть разовым выбросом.
 
 	if(!PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR))
 	{
@@ -223,9 +223,9 @@ void SENSOR_FET::Start_ADC(resolution bits,  gain gain_x, int channel)
 	}
 
 
-    // Г°Г Г§Г°ГїГ¤Г­Г®Г±ГІГј 12-14-16-18 -> ГўГ»Г·ГЁГІГ ГҐГ¬ 12 ГЁ Г¤ГҐГ«ГЁГ¬ Г­Г  3, ГЇГ®Г«ГіГ·Г ГҐГ¬ 0...3, ГЄГ ГЄ Г­Г Г¤Г®
-    // ГіГ±ГЁГ«ГҐГ­ГЁГҐ 1-2-4-8 -> ...
-    // Г­Г®Г¬ГҐГ° ГЄГ Г­Г Г«Г  - ГЄГ ГЄ ГҐГ±ГІГј, 0...3
+    // разрядность 12-14-16-18 -> вычитаем 12 и делим на 3, получаем 0...3, как надо
+    // усиление 1-2-4-8 -> ...
+    // номер канала - как есть, 0...3
 
     if(hSerial == INVALID_HANDLE_VALUE)
     {
@@ -237,16 +237,18 @@ void SENSOR_FET::Start_ADC(resolution bits,  gain gain_x, int channel)
     current_gain = gain_x;
 
     status = 0b10000000 + 32 * channel + 4 * bits + gain_x;
-    // 12-14-16-18 ГЎГЁГІ ГЅГІГ® b10000000-b10000100-b10001000-b10001100 (x80/x84/x88/x8C)
+    // 12-14-16-18 бит это b10000000-b10000100-b10001000-b10001100 (x80/x84/x88/x8C)
 
     WriteFile(hSerial, &setADC, sizeof(setADC), &bc, NULL);
-//    // ГЄГ®ГЈГ¤Г  Г¤Г®Г¤ГҐГ«Г Гѕ ГЉГЋГЏ Гў ГЄГ®Г­ГІГ°Г®Г«Г«ГҐГ°ГҐ, ГµГ®ГІГї ГЇГ°Г®Г№ГҐ ГЇГ°Г®ГЈГ°Г Г¬Г¬Г­Г® ГЈГ¤ГҐ-ГІГ® ГІГіГІ ГіГ±Г°ГҐГ¤Г­ГїГІГј:
+
+
+//    // когда доделаю КОП в контроллере, хотя проще программно где-то тут усреднять:
 //    if(averaging == 1)
 //        WriteFile(hSerial, &setADC, sizeof(setADC), &bc, NULL);
 //    else
 //    {
 //        WriteFile(hSerial, &setADCav, sizeof(setADCav), &bc, NULL);
-//        WriteFile(hSerial, &averaging, sizeof(averaging), &bc, NULL); // // ГІГ® ГҐГ±ГІГј ГЉГЋГЏ setADCav ГЇГ°ГҐГ¤ГЇГ®Г«Г ГЈГ ГҐГІ Г·ГІГ® Г¬ГЄ Г§Г ГЇГ°Г®Г±ГЁГІ ГҐГ№ГҐ Г®Г¤ГЁГ­ ГЎГ Г©ГІ
+//        WriteFile(hSerial, &averaging, sizeof(averaging), &bc, NULL); // // то есть КОП setADCav предполагает что мк запросит еще один байт
 //    }
     WriteFile(hSerial, &status, sizeof(status), &bc, NULL);
 
@@ -290,7 +292,7 @@ double SENSOR_FET::Get_voltage()
             return std::nan("");
 
         Beep(523,50);
-        // ГҐГ±Г«ГЁ Г±ГЎГ®Г© Г±Г®ГЇГ°Г®ГўГ®Г¦Г¤Г ГҐГІГ±Гї ГЁГ§Г¬ГҐГ­ГҐГ­ГЁГҐГ¬ Гў ГЎГ Г©ГІГҐ Г±ГІГ ГІГіГ±Г  - ГІГ® ГЂГ–ГЏ Г§Г ГЇГіГ±ГЄГ ГҐГІГ±Гї ГЇГ®ГўГІГ®Г°Г­Г®, Г±Г® Г±ГЎГ°Г®Г±Г®Г¬, ГІГЄ ГЎГҐГ§ Г­ГҐГЈГ® ГЅГІГ® Г§Г Г­ГЁГ¬Г ГҐГІ Г±ГҐГЄГіГ­Г¤ 10 (!)
+        // если сбой сопровождается изменением в байте статуса - то АЦП запускается повторно, со сбросом, тк без него это занимает секунд 10 (!)
         if(!PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR))
         {
             MessageBox(NULL, "PurgeComm() failed!", "Error", MB_OK);
@@ -301,11 +303,11 @@ double SENSOR_FET::Get_voltage()
 
         WriteFile(hSerial, &setADC, sizeof(setADC), &bc, NULL);
         WriteFile(hSerial, &status, sizeof(status), &bc, NULL);
-        // Г­Г® ГЇГ®ГЄГ  ГЇГ®Г·ГҐГ¬Гі-ГІГ® ГЇГ°Г®ГЈГ  Г§Г ГўГЁГ±Г ГҐГІ, Г  Г®ГЄГ®ГёГЄГ® Г­ГҐ ГЇГ®ГїГўГ«ГїГҐГІГ±Гї.
+        // но пока почему-то прога зависает, а окошко не появляется.
         ++reRead;
 
     }
-    while(adc.meas_status  != expected_status); // Г  Г§Г Г·ГҐГ¬ Г¤ГўГ Г¦Г¤Г» ГЇГ°Г®ГўГҐГ°ГїГІГј? Г Г­Г Г«Г®ГЈГЁГ·Г­Г Гї ГЇГ°Г®ГўГҐГ°ГЄГ  ГўГ»ГёГҐ ГЁГ¤ГҐГІ ГўГҐГ¤Гј...
+    while(adc.meas_status  != expected_status); // а зачем дважды проверять? аналогичная проверка выше идет ведь...
 
 
 // both corrections equal 0 for 18 bit and x1 gain.  But smth is wrong exactly with 0.
@@ -316,7 +318,7 @@ double SENSOR_FET::Get_voltage()
 
 
 
-    int raw_adc;
+    int raw_adc{0};
     if(current_res == bit18)
     {
         if(adc.meas_2 > 0x7F)
@@ -337,8 +339,8 @@ double SENSOR_FET::Get_voltage()
     }
 
 
-// ГЃГҐГ§ ГЄГ®Г°Г°ГҐГЄГ¶ГЁГЁ Г­Г  Г±Г¬ГҐГ№ГҐГ­ГЁГҐ Г­ГіГ«Гї, ГІГ®Г«ГјГЄГ® Г°ГҐГ§ГіГ«ГјГІГ ГІ ГЁГ§Г¬ГҐГ°ГҐГ­ГЁГї ГЂГ–ГЏ:
-    double result = adc_ref_ * static_cast<double>(raw_adc) / (1 * (static_cast<double> (adc_counts) / adc_res_correction)); // ГўГ°ГҐГ¬ГҐГ­Г­Г® ГЎГҐГ§ ГЄГ®Г°Г°ГҐГЄГ¶ГЁГЁ Г­Г  ГіГ±ГЁГ«ГҐГ­ГЁГҐ ,Г  Г¬Г®Г¦ГҐГІ ГІГ ГЄ ГЁ ГЇГ®Г­ГїГІГ­ГҐГҐ ГЎГіГ¤ГҐГІ....
+// Без коррекции на смещение нуля, только результат измерения АЦП:
+    double result = adc_ref_ * static_cast<double>(raw_adc) / (1 * (static_cast<double> (adc_counts) / adc_res_correction)); // временно без коррекции на усиление ,а может так и понятнее будет....
 //    double result = adc_ref * ( 0x10000 * adc.meas_2 + 0x100 * adc.meas_1 + adc.meas_0) / (gain_correction * ((double) adc_counts / adc_correction));
 
     return result;
@@ -360,9 +362,9 @@ double SENSOR_FET::Get_current() // mA
 
 
 
-int SENSOR_FET::CheckState() // Г‚Г®Г§ГўГ°Г Г№Г ГҐГІ Г¤Г /Г­ГҐГІ, Гў Г§Г ГўГЁГ±ГЁГ¬Г®Г±ГІГЁ Г®ГІ Г±Г®Г±ГІГ®ГїГ­ГЁГї ГЇГ®Г¤ГЄГ«ГѕГ·ГҐГ­ГЁГї.
+int SENSOR_FET::CheckState() // Возвращает да/нет, в зависимости от состояния подключения.
 {
-	if(hSerial == INVALID_HANDLE_VALUE) // Г’.ГҐ. Г±Г·ГҐГІГ·ГЁГЄ Г­ГҐ ГЇГ®Г¤ГЄГ«ГѕГ·Г Г«Г±Гї.
+	if(hSerial == INVALID_HANDLE_VALUE) // Т.е. счетчик не подключался.
         return 0;
 	else
         return 1;
@@ -372,7 +374,7 @@ void SENSOR_FET::Close()
 {
 	if(hSerial != INVALID_HANDLE_VALUE)
 	{
-		CloseHandle(hSerial); // ГЇГ®ГµГ®Г¦ГҐ Г­ГҐ Г±Г°Г ГЎГ ГІГ»ГўГ ГҐГІ... - ГЇГ°ГЁ Г®ГІГЄГ«ГѕГ·ГҐГ­ГЁГЁ Г­ГҐ Г±ГЎГ°Г Г±Г»ГўГ ГҐГІ.
+		CloseHandle(hSerial); // похоже не срабатывает... - при отключении не сбрасывает.
 		hSerial = INVALID_HANDLE_VALUE;
 	}
 }
@@ -385,7 +387,7 @@ int SENSOR_FET::GetPortNumber()
 /*
 void SENSOR_FET::SetPortNumber(int port_number)
 {
-	if((port_number > 0) && (port_number < 10) && (hSerial == INVALID_HANDLE_VALUE)) //  ГІГ®Г«ГјГЄГ® ГҐГ±Г«ГЁ Г¬Г®Г­Г®ГµГ°Г®Г¬Г ГІГ®Г° Г®ГІГЄГ«ГѕГ·ГҐГ­
+	if((port_number > 0) && (port_number < 10) && (hSerial == INVALID_HANDLE_VALUE)) //  только если монохроматор отключен
  	com_port = port_number;
 }
 
@@ -450,7 +452,8 @@ double SENSOR_FET::GetPulseDelay()
 
 void SENSOR_FET::SetDrainLimit(double drain_limit)
 {
-    drain_limit_ = drain_limit;
+    if( (drain_limit <= 50.0) && (drain_limit > 0.0))
+        drain_limit_ = drain_limit;
 }
 
 double SENSOR_FET::GetDrainLimit()
@@ -460,7 +463,8 @@ double SENSOR_FET::GetDrainLimit()
 
 void SENSOR_FET::SetGateLimit(double gate_limit)
 {
-    gate_limit_ = gate_limit;
+    if( (gate_limit <= 50.0) && (gate_limit > 0.0))
+        gate_limit_ = gate_limit;
 }
 
 double SENSOR_FET::GetGateLimit()
@@ -483,7 +487,7 @@ bool SENSOR_FET::GetZeroCorrMode()
 void SENSOR_FET::SetAveraging(int averaging)
 {
     if( (averaging <= 64) && (averaging > 0))
-        averaging_ = static_cast<uint8_t>(averaging);
+        averaging_ = averaging;
 
 }
 
@@ -502,14 +506,16 @@ void SENSOR_FET::Set_bias_corr(double bias_correction){bias_correction_ = bias_c
 
 int SENSOR_FET::Set_dac_ref(double dac_ref)
 {
-    dac_ref_ = dac_ref;
+    if( (dac_ref <= 12.0) && (dac_ref > 0.0))
+        dac_ref_ = dac_ref;
 
     return 1;
 }
 
 int SENSOR_FET::Set_adc_ref(double adc_ref)
 {
-    adc_ref_ = adc_ref;
+    if( (adc_ref <= 12.0) && (adc_ref > 0.0))
+        adc_ref_ = adc_ref;
 
     return 1;
 }

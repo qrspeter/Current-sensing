@@ -644,6 +644,7 @@ void current_sensingFrame::OnSettingChange(wxCommandEvent &event)
     adjustment_sizer -> Add(averaging, 0, wxSHAPED);
 //    averaging -> SetDigits(2);
 //    averaging -> SetIncrement(1);
+    averaging -> Disable(); // Something is going wrong with averaging in Arduino
 
 
     adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("Bias correction, V")), 0, wxSHAPED);
@@ -852,9 +853,9 @@ void current_sensingFrame::Start_ADC_wait(SENSOR_FET::resolution res, SENSOR_FET
 
     auto sleeping = sensor.GetAveraging() * sleep_time[sensor_resolution  -> GetSelection()];
     if(sleeping < static_cast<int>(delay_meas -> GetValue()*1000))
-    Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
+        Sleep(static_cast<int>(delay_meas -> GetValue()*1000));
     else
-    Sleep(sleeping);
+        Sleep(sleeping - 1);
 }
 
 
@@ -923,6 +924,21 @@ void current_sensingFrame::IV_start(wxCommandEvent &event)
     SENSOR_FET::resolution res = static_cast<SENSOR_FET::resolution>(sensor_resolution  -> GetSelection());
 
     double zero_correction{0};
+    if(sensor.GetZeroCorrMode() == true)
+    {
+        const int zero_averaging{4};
+        double accum{0};
+        sensor.Set_voltage(SENSOR_FET::DRAIN, 0);
+        sensor.Set_voltage(SENSOR_FET::GATE, 0);
+        for(int i = 0; i < zero_averaging; i++)
+        {
+            Start_ADC_wait(res, static_cast<SENSOR_FET::gain>(sensor_gain  -> GetSelection()));
+            accum += sensor.Get_current();
+        }
+        zero_correction = accum / zero_averaging;
+    }
+
+/*
     if(sensor.GetZeroCorrMode())
     {
         sensor.Set_voltage(SENSOR_FET::DRAIN, 0);
@@ -930,7 +946,7 @@ void current_sensingFrame::IV_start(wxCommandEvent &event)
         Start_ADC_wait(res, static_cast<SENSOR_FET::gain>(sensor_gain  -> GetSelection()));
         zero_correction = sensor.Get_current();
     }
-
+*/
 
     for(double voltage = start; scanDirection * voltage <= scanDirection * stop + 1e-10;  voltage += scanDirection * step) // 0.0000000001 добавлена чтобы компенсировать набегание погрешности и окончания до последней точки
     {
@@ -954,7 +970,16 @@ void current_sensingFrame::IV_start(wxCommandEvent &event)
         Start_ADC_wait(res, static_cast<SENSOR_FET::gain>(sensor_gain  -> GetSelection()));
 
         V_data.push_back(voltage);
-        I_data.push_back(sensor.Get_current() - zero_correction); //  Get_ADC
+        double current = sensor.Get_current();
+        I_data.push_back(current - zero_correction); //  Get_ADC
+
+
+        std::ostringstream stm;
+        stm << std::fixed << std::setprecision(2) << static_cast<double>(sensor.Get_current() - zero_correction) << " mA, ";
+        stm << std::fixed << std::setprecision(2) << static_cast<double>(voltage) << " V. ";
+        SetStatusText(stm.str(), 0);
+
+
 
         frameworkVector -> SetData(V_data, I_data);
 
@@ -1087,7 +1112,8 @@ void current_sensingFrame::Transient_start(wxCommandEvent &event)
         Start_ADC_wait(res, static_cast<SENSOR_FET::gain>(sensor_gain  -> GetSelection()));
 
 
-        I_data.push_back(sensor.Get_current() - zero_correction); //
+        double current = sensor.Get_current();
+        I_data.push_back(current - zero_correction); //
         T_data.push_back(static_cast<double>(duration));
       //  T_data.push_back(static_cast<double>(since(start_time).count())/1000.0);
         V_data.push_back(trans_drain_bias -> GetValue());
