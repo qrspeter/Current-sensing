@@ -76,7 +76,7 @@ public:
 
 private:
 
-    bool    zero_corr_{TRUE};
+    bool    zero_corr_{false};
     uint8_t averaging_{1};
 
     double  gate_limit_{40.0}; // voltage_max
@@ -94,7 +94,7 @@ private:
 //    double voltage_gate_max = 40.0;
 //    double voltage_drain_max = 12.0;
     double  dac_ref_{4.98};
-    double  adc_ref_ {2.048};
+    double  adc_ref_{2.048};
 
     double  gate_corr_coeff_{1.0}; // 0.982;
     double  drain_corr_coef_{1.0}; // 0.898;
