@@ -21,6 +21,8 @@
 #include "sensor_fet.h"
 
 
+
+
 SENSOR_FET::SENSOR_FET()
 {
 
@@ -123,6 +125,7 @@ int SENSOR_FET::Open(int port)
 
 
 
+
 	Reset();
 	Sleep(1000);
 //	Set_ADC(14, 1, 0);
@@ -136,6 +139,9 @@ int SENSOR_FET::Open(int port)
 		return(0);
 
     }
+
+
+
 
 	return 1;
 }
@@ -356,7 +362,7 @@ double SENSOR_FET::Get_current() // mA
 
     double current =  1000.0 * ( voltage ) / ( current_detection_gain );
 
-    return current; // mA
+    return current - current_correction_; // mA
 }
 
 

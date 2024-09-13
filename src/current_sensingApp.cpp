@@ -17,6 +17,7 @@
 
 #include "current_sensingApp.h"
 #include "current_sensingMain.h"
+#include "simpleini/SimpleIni.h"
 
 #include "sensor_fet/sensor_fet.h"
 

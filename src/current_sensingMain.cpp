@@ -555,21 +555,60 @@ void current_sensingFrame::OnOpen(wxCommandEvent &event)
 
 void current_sensingFrame::Sensor_connect(wxCommandEvent &event)
 {
+        std::string file_ini = "test.ini";
+        CSimpleIniA ini;
+        SI_Error rc = ini.LoadFile(file_ini.c_str()); // replace to file_ini std::string{"test.ini"} from *.h
+        if (rc < 0)
+        {
+            if(rc == -3)
+            {
+                wxMessageBox(_("INI error!"), _("File ini error!"));
+                // and create ini file
 
-   if(sensor.CheckState())
+            }
+            else
+            {
+                wxMessageBox(_("INI error!"), _("Handle ini error!"));
+            }
+            //rc = ini.SaveFile("test.ini");
+            std::string data = "[Settings] Auto_zero = false  \n Averaging = 1  \n Bias_correction = -1.2  \n Current_correction = 1.1 \n  \n [Laser_setting] \n Pulse_duration = 0.2 \n Pulse_numbers = 4 \n Pulse_delay = 0.05";
+            CSimpleIniA ini_default;
+            rc = ini_default.LoadData(data);
+            rc = ini_default.SaveFile(file_ini.c_str());
+
+
+        }
+
+
+    if(sensor.CheckState())
     {   // already opened
         sensor.Close();
         sensor_com_connect->SetLabel("Connect");
         sensor_com_choice -> Enable();
         iv_meas_start -> Disable();
         transient_meas_start -> Disable();
+
+        // write data to ini
+        if (rc >= 0)
+        {
+            ini.SetBoolValue("Settings", "Auto_zero", sensor.GetZeroCorrMode());
+            ini.SetLongValue("Settings", "Averaging", sensor.GetAveraging());
+            ini.SetDoubleValue("Settings", "Bias_correction", sensor.Get_bias_corr());
+            ini.SetDoubleValue("Settings", "Current_correction", sensor.Get_current_correction());
+            ini.SaveFile(file_ini.c_str());
+
+        }
+
+
+
+
    }
     else
     { // is not opened yet
 //        if(sensor.Open(sensor.GetPortNumber()))
-        sensor_com_connect -> Disable();
         if(sensor.Open((sensor_com_choice -> GetSelection()) + 1))
         {
+            sensor_com_connect -> Disable();
 
             // change button label to Disconnect
             sensor_com_connect -> Enable();
@@ -588,6 +627,20 @@ void current_sensingFrame::Sensor_connect(wxCommandEvent &event)
             sensor_com_connect -> Enable();
             // nothing to do or  make an error message - currently we already have a lot of MessageBoxes from Open
         }
+        // read data from ini
+
+// Load settings or restore ini and set output voltage to 0
+
+
+        // Load setting
+        if (rc >= 0)
+        {
+            sensor.SetZeroCorrMode(ini.GetBoolValue("Settings", "Auto_zero"));
+            sensor.SetAveraging(ini.GetLongValue("Settings", "Averaging"));
+            sensor.Set_bias_corr(ini.GetDoubleValue("Settings", "Bias_correction"));
+            sensor.Set_current_correction(ini.GetDoubleValue("Settings", "Current_correction"));
+        }
+
 
     }
 
@@ -619,7 +672,7 @@ void current_sensingFrame::OnSettingChange(wxCommandEvent &event)
 
 
 // https://docs.wxwidgets.org/2.8.8/wx_wxdialog.html#wxdialog
-    wxDialog *setting_change = new wxDialog(this, -1, _("Setting"), wxDefaultPosition, wxSize(250, 300), wxDEFAULT_DIALOG_STYLE, "dialogBox"); // wxDefaultSize
+    wxDialog *setting_change = new wxDialog(this, -1, _("Setting"), wxDefaultPosition, wxSize(300, 300), wxDEFAULT_DIALOG_STYLE, "dialogBox"); // wxDefaultSize
 
 
 
@@ -653,7 +706,7 @@ void current_sensingFrame::OnSettingChange(wxCommandEvent &event)
     bias_corr -> SetIncrement(0.01);
     adjustment_sizer -> Add(bias_corr, 0, wxSHAPED);
 
-    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("Current correction")), 0, wxSHAPED);
+    adjustment_sizer -> Add(new wxStaticText(setting_panel, -1, wxT("Current correction, mA")), 0, wxSHAPED);
     wxSpinCtrlDouble *current_corr = new wxSpinCtrlDouble(setting_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, -5.0, 5.0, sensor.Get_current_correction(), 0.0, wxT("smth"));
     adjustment_sizer -> Add(current_corr, 0, wxSHAPED);
     current_corr -> SetDigits(2);

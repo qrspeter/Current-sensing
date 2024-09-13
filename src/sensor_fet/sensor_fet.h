@@ -8,7 +8,6 @@ public:
     SENSOR_FET();
     ~SENSOR_FET();
 
-
     enum    terminal{DRAIN = 0, GATE = 1}; //    enum terminal {DRAIN, GATE};
     enum    resolution{bit12 = 0, bit14 = 1, bit16 = 2, bit18 = 3};
     enum    gain{x1 = 0, x2 = 1, x4 = 2, x8 = 3};

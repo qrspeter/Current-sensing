@@ -21,6 +21,7 @@
 
 #include "mathplot/mathplot.h"
 #include "mathplot/MathPlotConfig.h"
+#include "simpleini/SimpleIni.h"
 
 #include "sensor_fet/sensor_fet.h"
 
@@ -48,6 +49,7 @@ class current_sensingFrame: public wxFrame
 
 
         SENSOR_FET sensor;
+        CSimpleIniA ini;
 
         enum
         {
