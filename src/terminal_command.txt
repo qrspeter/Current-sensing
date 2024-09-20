@@ -1,0 +1,28 @@
+-------------- Build: Debug in current_sensing (compiler: GNU GCC Compiler)---------------
+
+g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE -Wall -g -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu -c E:\programming\FET_sensor\Current-sensing\src\current_sensingApp.cpp -o obj\Debug\current_sensingApp.o
+g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE -Wall -g -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu -c E:\programming\FET_sensor\Current-sensing\src\current_sensingMain.cpp -o obj\Debug\current_sensingMain.o
+g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE -Wall -g -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu -c E:\programming\FET_sensor\Current-sensing\src\mathplot\mathplot.cpp -o obj\Debug\mathplot\mathplot.o
+g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE -Wall -g -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu -c E:\programming\FET_sensor\Current-sensing\src\mathplot\MathPlotConfig.cpp -o obj\Debug\mathplot\MathPlotConfig.o
+windres.exe -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu  -J rc -O coff -i E:\programming\FET_sensor\Current-sensing\src\resource.rc -o obj\Debug\resource.res
+g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE -Wall -g -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu -c E:\programming\FET_sensor\Current-sensing\src\sensor_fet\sensor_fet.cpp -o obj\Debug\sensor_fet\sensor_fet.o
+g++.exe -LC:\wxwidgets\lib\gcc_dll -o bin\Debug\current_sensing.exe obj\Debug\current_sensingApp.o obj\Debug\current_sensingMain.o obj\Debug\mathplot\mathplot.o obj\Debug\mathplot\MathPlotConfig.o obj\Debug\sensor_fet\sensor_fet.o  obj\Debug\resource.res -mthreads  -lwxmsw31u -mwindows
+
+
+-------------- Build: Release in current_sensing (compiler: GNU GCC Compiler)---------------
+
+g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE -Wall -O2 -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu -c E:\programming\FET_sensor\Current-sensing\src\current_sensingApp.cpp -o obj\Release\current_sensingApp.o
+g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE -Wall -O2 -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu -c E:\programming\FET_sensor\Current-sensing\src\current_sensingMain.cpp -o obj\Release\current_sensingMain.o
+g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE -Wall -O2 -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu -c E:\programming\FET_sensor\Current-sensing\src\mathplot\mathplot.cpp -o obj\Release\mathplot\mathplot.o
+g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE -Wall -O2 -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu -c E:\programming\FET_sensor\Current-sensing\src\mathplot\MathPlotConfig.cpp -o obj\Release\mathplot\MathPlotConfig.o
+windres.exe -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu  -J rc -O coff -i E:\programming\FET_sensor\Current-sensing\src\resource.rc -o obj\Release\resource.res
+g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE -Wall -O2 -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu -c E:\programming\FET_sensor\Current-sensing\src\sensor_fet\sensor_fet.cpp -o obj\Release\sensor_fet\sensor_fet.o
+
+
+--------- Partial release build --------------
+Release:
+
+g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE -Wall -O2 -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu -c E:\programming\FET_sensor\Current-sensing\src\current_sensingApp.cpp -o obj\Release\current_sensingApp.o
+g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE -Wall -O2 -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu -c E:\programming\FET_sensor\Current-sensing\src\current_sensingMain.cpp -o obj\Release\current_sensingMain.o
+g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE -Wall -O2 -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu -c E:\programming\FET_sensor\Current-sensing\src\sensor_fet\sensor_fet.cpp -o obj\Release\sensor_fet\sensor_fet.o
+g++.exe -LC:\wxwidgets\lib\gcc_dll -o bin\Release\current_sensing.exe obj\Release\current_sensingApp.o obj\Release\current_sensingMain.o obj\Release\mathplot\mathplot.o obj\Release\mathplot\MathPlotConfig.o obj\Release\sensor_fet\sensor_fet.o  obj\Release\resource.res -s -mthreads  -lwxmsw31u -mwindows

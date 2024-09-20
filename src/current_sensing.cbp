@@ -73,6 +73,7 @@
 		</Unit>
 		<Unit filename="sensor_fet/sensor_fet.cpp" />
 		<Unit filename="sensor_fet/sensor_fet.h" />
+		<Unit filename="simpleini/SimpleIni.h" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>

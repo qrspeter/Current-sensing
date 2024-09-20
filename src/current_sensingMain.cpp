@@ -197,7 +197,7 @@ current_sensingFrame::current_sensingFrame(wxFrame *frame, const wxString& title
 
 
     wxSensorGrid ->  Add(new wxStaticText(framework_panel, -1, wxT("Delay, s")), 0, wxSHAPED);
-    delay_meas =        new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 0, 1000, 0.0, 0.0, wxT("smth"));
+    delay_meas =  new wxSpinCtrlDouble(framework_panel, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxTE_PROCESS_ENTER, 0, 1000, 0.0, 0.0, wxT("smth"));
     delay_meas -> SetDigits(1);
     delay_meas -> SetIncrement(0.1);
     delay_meas -> Bind(wxEVT_TEXT_ENTER, &OnSpinCtrlTextEnter, this);
@@ -555,29 +555,41 @@ void current_sensingFrame::OnOpen(wxCommandEvent &event)
 
 void current_sensingFrame::Sensor_connect(wxCommandEvent &event)
 {
-        std::string file_ini = "test.ini";
-        CSimpleIniA ini;
-        SI_Error rc = ini.LoadFile(file_ini.c_str()); // replace to file_ini std::string{"test.ini"} from *.h
-        if (rc < 0)
+
+//  if no file - create it!
+
+    std::ifstream ifile;
+    ifile.open(file_ini.c_str());
+    if(ifile)
+    {
+		ifile.close();
+    }
+    else
+    {
+        std::ofstream ofile;
+		ofile.open(file_ini.c_str());
+		ofile  << default_ini_data;
+		ofile.close();
+	}
+
+
+//    CSimpleIniA ini;
+    SI_Error rc = ini.LoadFile(file_ini.c_str()); // replace to file_ini std::string{"test.ini"} from *.h
+    if (rc < 0)
+    {
+        if(rc == -3)
         {
-            if(rc == -3)
-            {
-                wxMessageBox(_("INI error!"), _("File ini error!"));
-                // and create ini file
-
-            }
-            else
-            {
-                wxMessageBox(_("INI error!"), _("Handle ini error!"));
-            }
-            //rc = ini.SaveFile("test.ini");
-            std::string data = "[Settings] Auto_zero = false  \n Averaging = 1  \n Bias_correction = -1.2  \n Current_correction = 1.1 \n  \n [Laser_setting] \n Pulse_duration = 0.2 \n Pulse_numbers = 4 \n Pulse_delay = 0.05";
-            CSimpleIniA ini_default;
-            rc = ini_default.LoadData(data);
-            rc = ini_default.SaveFile(file_ini.c_str());
-
+            wxMessageBox(_("INI error!"), _("File ini error!"));
+            // and create ini file
 
         }
+        else
+        {
+            wxMessageBox(_("INI error!"), _("Handle ini error!"));
+        }
+
+
+    }
 
 
     if(sensor.CheckState())

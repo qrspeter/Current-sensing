@@ -50,6 +50,9 @@ class current_sensingFrame: public wxFrame
 
         SENSOR_FET sensor;
         CSimpleIniA ini;
+        const std::string file_ini = "setting.ini";
+        const std::string default_ini_data = "[Settings] Auto_zero = false  \n Averaging = 1  \n Bias_correction = -1.2  \n Current_correction = 1.1 \n  \n [Laser_setting] \n Pulse_duration = 0.2 \n Pulse_numbers = 4 \n Pulse_delay = 0.05";
+
 
         enum
         {
