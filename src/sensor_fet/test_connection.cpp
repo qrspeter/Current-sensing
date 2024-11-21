@@ -1,15 +1,38 @@
 #include <iostream>
 #include <windows.h>
 #include <string>
+#include<vector>
 
 #include "sensor_fet.h"
 
+SENSOR_FET sensor;
 
-int main()
+std::vector<std::string> SerialList()
 {
-    SENSOR_FET sensor;
+    std::vector<std::string> serialList;
+    std::string COMName("COM"), queryName("");
+    char bufferTragetPath[5000];
+    long path_size{0};
 
-    if(!sensor.Open(3))
+    //test each COM name to get the one used by the system and get his description name
+    for (int i{1}; i < 24; i++)
+    {
+        queryName = COMName + std::to_string(i);
+
+        //Query the path of the COMName
+        path_size = QueryDosDeviceA(queryName.c_str(), bufferTragetPath, 5000);
+        //std::cout << std::endl << "Path for " << queryName << ":" << path_size << "   " << queryName;
+        if (path_size != 0) {
+            std::cout << queryName << " on " << bufferTragetPath << std::endl;
+            serialList.push_back(queryName);
+        }
+    }
+    return serialList;
+}
+
+int connect(int port_no)
+{
+    if(!sensor.Open(port_no))
 	{
 		std::cout << "Device is not connected"  << std::endl;
 		return 0;
@@ -82,9 +105,27 @@ int main()
                     std::cout << "Device is not connected" << std::endl;
 
             }
-
     }
+	return 1;
+}
 
+
+int main()
+{
+
+	int port_no{0};
+	auto ports = SerialList();
+	std::cout << "Availible ports: " << '\n';
+	for (auto port: ports)
+	{
+		std::cout << port << '\n';
+		port_no = std::stoi(port.substr(3)); // "COM" + port_no
+		if(connect(port_no) == 1)
+			break;
+
+	}
+	if(!port_no)
+		std::cout << "Availible ports are not found" << std::endl;
 
     return 0;
 }

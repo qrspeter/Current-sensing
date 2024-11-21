@@ -6374,7 +6374,9 @@
 	<cmath>
 	"sensor_fet.h"
 
-1726242113 e:\programming\fet_sensor\current-sensing\src\sensor_fet\sensor_fet.h
+1732198360 e:\programming\fet_sensor\current-sensing\src\sensor_fet\sensor_fet.h
+	<cstdint>
+	<windows.h>
 
 1726242157 source:e:\programming\fet_sensor\current-sensing\src\current_sensingapp.cpp
 	"wx_pch.h"
@@ -6386,8 +6388,9 @@
 1720429536 e:\programming\fet_sensor\current-sensing\src\current_sensingapp.h
 	<wx/app.h>
 
-1730569756 e:\programming\fet_sensor\current-sensing\src\current_sensingmain.h
+1730570406 e:\programming\fet_sensor\current-sensing\src\current_sensingmain.h
 	<wx/wx.h>
+	<vector>
 	"current_sensingApp.h"
 	<wx/dialog.h>
 	<wx/string.h>

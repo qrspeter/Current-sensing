@@ -431,8 +431,8 @@ void loop()
 
   //===============================================================
         default:
-          byte error_byte = 0xFF;
-          Serial.write(error_byte);
+          byte default_answer = 0xFF;
+          Serial.write(default_answer);
         
       }
 

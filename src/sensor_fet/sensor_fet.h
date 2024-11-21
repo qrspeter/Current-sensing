@@ -142,7 +142,7 @@ private:
     const uint8_t   setLaser_Off  {6};
     const uint8_t   setADCav      {7};
 
-    byte check = 0xFF;
+    unsigned char default_answer = 0xFF;
 
 
     union

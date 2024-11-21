@@ -124,11 +124,19 @@ int SENSOR_FET::Open(int port)
 	}
 
 
+	if(!Check())
+    {
+        MessageBox(NULL, "Wrong answer, probably wrong COM device", "Error", MB_OK);
+        CloseHandle(hSerial);
+		return(0);
 
+    }
 
 	Reset();
 	Sleep(1000);
-//	Set_ADC(14, 1, 0);
+
+
+    //	Set_ADC(14, 1, 0);
 	Start_ADC(bit14, x1);
 	Sleep(200);
 
@@ -156,11 +164,11 @@ int SENSOR_FET::Reset()
 
 int SENSOR_FET::Check()
 {
-   byte answer{0};
-   WriteFile(hSerial, &check, sizeof(check), &bc, NULL);
+   unsigned char answer{0};
+   WriteFile(hSerial, &default_answer, sizeof(default_answer), &bc, NULL);
    ReadFile(hSerial, &answer, 1, &bc, NULL);
 
-   if(answer == check)
+   if(answer == default_answer)
     return 1;
 
 
