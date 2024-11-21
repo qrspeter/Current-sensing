@@ -23,6 +23,9 @@
 
 #include "Wire.h" // This library allows you to communicate with I2C/TWI devices
 
+const char model[] = "Current Sensor";
+const char version[] = "ver. 1.1";
+byte codename = 128;
 
 // адреса устройств
 const byte DAC_GATE_ADDRESS   = 0x60; // Troyka - 0x62
@@ -131,8 +134,12 @@ void Sensor_reset()
    Wire.beginTransmission(ADC_DRAIN_ADDRESS);
    Wire.write(ADC_mode_mask); // первый канал (00), единичная выборка (0), 18 бит (11), единичное усиление (00)
    Wire.endTransmission();
+   
+   //Serial.write(codename); // codename
+   
            
 }
+
 
 
 void setup() {

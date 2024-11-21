@@ -14,6 +14,8 @@
     #include <wx/wx.h>
 #endif
 
+#include <vector>
+
 #include "current_sensingApp.h"
 
 #include <wx/dialog.h>

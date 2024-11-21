@@ -6386,7 +6386,7 @@
 1720429536 e:\programming\fet_sensor\current-sensing\src\current_sensingapp.h
 	<wx/app.h>
 
-1726825886 e:\programming\fet_sensor\current-sensing\src\current_sensingmain.h
+1730569756 e:\programming\fet_sensor\current-sensing\src\current_sensingmain.h
 	<wx/wx.h>
 	"current_sensingApp.h"
 	<wx/dialog.h>
@@ -6428,7 +6428,7 @@
 	<wx/textctrl.h>
 	"mathplot.h"
 
-1726835414 source:e:\programming\fet_sensor\current-sensing\src\current_sensingmain.cpp
+1726836253 source:e:\programming\fet_sensor\current-sensing\src\current_sensingmain.cpp
 	"wx_pch.h"
 	"current_sensingMain.h"
 	<wx/filename.h>
