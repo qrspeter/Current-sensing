@@ -183,8 +183,13 @@ current_sensingFrame::current_sensingFrame(wxFrame *frame, const wxString& title
 // sensor =========================
     wxGridSizer *wxSensorGrid  = new wxGridSizer(4,2,3,3);
 
+    actual_ports = SerialList();
+    wxString com_ports[actual_ports.size()];
+    std::copy(actual_ports.begin(), actual_ports.end(), com_ports);
+
+
     // https://docs.wxwidgets.org/3.0/classwx_choice.html
-    sensor_com_choice = new wxChoice(framework_panel, -1, wxDefaultPosition, wxDefaultSize, 9, ports, wxCB_SORT);
+    sensor_com_choice = new wxChoice(framework_panel, -1, wxDefaultPosition, wxDefaultSize, actual_ports.size(), com_ports, wxCB_SORT);
     wxSensorGrid -> Add(sensor_com_choice, 0, wxSHAPED);
     sensor_com_connect = new wxButton(framework_panel, idSensor_connect, wxT("Connect"));
     wxSensorGrid -> Add(sensor_com_connect, 0, wxSHAPED);
@@ -618,7 +623,8 @@ void current_sensingFrame::Sensor_connect(wxCommandEvent &event)
     else
     { // is not opened yet
 //        if(sensor.Open(sensor.GetPortNumber()))
-        if(sensor.Open((sensor_com_choice -> GetSelection()) + 1))
+//        if(sensor.Open((sensor_com_choice -> GetSelection()) + 1))
+        if(sensor.Open(actual_ports[sensor_com_choice -> GetSelection()]))
         {
             sensor_com_connect -> Disable();
 
@@ -1227,3 +1233,25 @@ void current_sensingFrame::Transient_stop(wxCommandEvent &event)
     measurementStop = TRUE;
 }
 
+std::vector<std::string> current_sensingFrame::SerialList()
+{
+    std::vector<std::string> serialList;
+    std::string COMName("COM"), queryName("");
+    char bufferTragetPath[5000];
+    long path_size{0};
+
+    //test each COM name to get the one used by the system and get his description name
+    for (int i{1}; i < 24; i++)
+    {
+        queryName = COMName + std::to_string(i);
+
+        //Query the path of the COMName
+        path_size = QueryDosDeviceA(queryName.c_str(), bufferTragetPath, 5000);
+        //std::cout << std::endl << "Path for " << queryName << ":" << path_size << "   " << queryName;
+        if (path_size != 0) {
+            std::cout << queryName << " on " << bufferTragetPath << std::endl;
+            serialList.push_back(queryName);
+        }
+    }
+    return serialList;
+}

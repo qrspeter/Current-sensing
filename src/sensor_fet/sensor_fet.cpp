@@ -34,10 +34,16 @@ SENSOR_FET::~SENSOR_FET()
 	CloseHandle(hSerial);
 
 }
-
-int SENSOR_FET::Open(int port)
+/*
 {
-
+	int port_no = std::stoi(port.substr(3)); // "COM" + port_no
+	Open(port_no);
+}
+*/
+int SENSOR_FET::Open(std::string port = "COM3")
+//int SENSOR_FET::Open(int port)
+{
+/*
     char com_name[] = "COM3";
     if(port > 50)
 	{
@@ -45,12 +51,12 @@ int SENSOR_FET::Open(int port)
 		CloseHandle(hSerial);
 		return(0);
 	}
+*/
+    //com_port_ = port;
 
-    com_port_ = port;
+    //com_name[3] = static_cast<char>(port + 0x30);
 
-    com_name[3] = static_cast<char>(port + 0x30);
-
-    hSerial = CreateFileA((LPCSTR)com_name, GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
+    hSerial = CreateFileA((LPCSTR)port.c_str(), GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
 
 	if(hSerial == INVALID_HANDLE_VALUE) // проверка выделения порта. NULL for 32-bit Win and INVALID_HANDLE_VALUE for 64bit
 	{

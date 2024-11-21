@@ -30,9 +30,9 @@ std::vector<std::string> SerialList()
     return serialList;
 }
 
-int connect(int port_no)
+int connect(std::string port)
 {
-    if(!sensor.Open(port_no))
+    if(!sensor.Open(port))
 	{
 		std::cout << "Device is not connected"  << std::endl;
 		return 0;
@@ -119,8 +119,8 @@ int main()
 	for (auto port: ports)
 	{
 		std::cout << port << '\n';
-		port_no = std::stoi(port.substr(3)); // "COM" + port_no
-		if(connect(port_no) == 1)
+		//port_no = std::stoi(port.substr(3)); // "COM" + port_no
+		if(connect(port) == 1)
 			break;
 
 	}

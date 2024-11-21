@@ -38,7 +38,8 @@ class current_sensingFrame: public wxFrame
         std::vector <double> V_data;
         std::vector <double> T_data;
 
-        const wxString ports[9] = { wxT("COM1"), wxT("COM2"), wxT("COM3"), wxT("COM4"), wxT("COM5"), wxT("COM6"), wxT("COM7"), wxT("COM8"), wxT("COM9")};
+        std::vector<std::string> actual_ports;
+        //const wxString ports[50] = { wxT("COM1"), wxT("COM2"), wxT("COM3"), wxT("COM4"), wxT("COM5"), wxT("COM6"), wxT("COM7"), wxT("COM8"), wxT("COM9")};
         const wxString adc_resolution[4] = { wxT("12 bit"), wxT("14 bit"), wxT("16 bit"), wxT("18 bit")};
         const wxString adc_gain[4] = { wxT("1x"), wxT("2x"), wxT("4x"), wxT("8x")};
         const wxString iv_modes[2] = { wxT("Ids(Uds)"), wxT("Ids(Ugs)")};
@@ -104,7 +105,7 @@ class current_sensingFrame: public wxFrame
         void OnSpinCtrlTextEnter(wxCommandEvent& evt);
 
         void Setting_OK(wxCommandEvent& evt);
-
+        std::vector<std::string> SerialList();
 
         wxPanel *framework_panel;
 

@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <windows.h>
+#include <string>
 
 class SENSOR_FET
 {
@@ -15,7 +16,8 @@ public:
     enum    gain{x1 = 0, x2 = 1, x4 = 2, x8 = 3};
     enum    laser{LASER_OFF = 0, LASER_ON = 1};
 
-    int     Open(int);
+    int     Open(std::string);
+//    int     Open(int);
     void    Close();
 
 	int     GetPortNumber(); // —читывание номера порта.
