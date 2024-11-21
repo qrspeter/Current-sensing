@@ -9,6 +9,7 @@
  */
 
 
+#include "sensor_fet.h"
 
 
 #include <iostream>
@@ -18,7 +19,6 @@
 #include <string>
 #include <cmath> // pow(a, b) = ab, std::nan, std::isnan
 
-#include "sensor_fet.h"
 
 
 
@@ -39,7 +39,7 @@ int SENSOR_FET::Open(int port)
 {
 
     char com_name[] = "COM3";
-    if(port > 9)
+    if(port > 50)
 	{
 		MessageBox(NULL, "Wrong number!", "Error", MB_OK);
 		CloseHandle(hSerial);
@@ -152,6 +152,20 @@ int SENSOR_FET::Reset()
    WriteFile(hSerial, &resetSensor, sizeof(resetSensor), &bc, NULL);
 
    return 1;
+}
+
+int SENSOR_FET::Check()
+{
+   byte answer{0};
+   WriteFile(hSerial, &check, sizeof(check), &bc, NULL);
+   ReadFile(hSerial, &answer, 1, &bc, NULL);
+
+   if(answer == check)
+    return 1;
+
+
+   return 0;
+
 }
 
 int SENSOR_FET::Set_voltage(terminal  term, double voltage)

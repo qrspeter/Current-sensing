@@ -1,6 +1,8 @@
 #ifndef SENSOR_FET_H_INCLUDED
 #define SENSOR_FET_H_INCLUDED
 
+#include <cstdint>
+#include <windows.h>
 
 class SENSOR_FET
 {
@@ -32,11 +34,13 @@ public:
 //    double Get_voltage_drain_max();
 //    double Get_voltage_gate_max();
 
-    int     CheckState(); // Считывание состояния счетчика, подключен (1)/отключен (0).
+    int     CheckState(); // Check status of the object of class, exist (1)/ not exist (0).
+    int Check(); // Check answer from the Arduino
     void    Start_ADC(resolution, gain, int channel = 0);
 
     int     Set_voltage(terminal, double);
 
+    double  Get_voltage();
     double  Get_current();
 
     void    Set_current_correction(double);
@@ -85,7 +89,6 @@ private:
     int     pulse_numbers_{4};
     double  pulse_duration_{0.2};
     double  pulse_delay_{0.05};
-    double  Get_voltage();
 
 	int     com_port_;// Номер подключаемого COM порта.
 //    double voltage_dd = 12.00;
@@ -138,6 +141,8 @@ private:
     const uint8_t   setLaser_On   {5};
     const uint8_t   setLaser_Off  {6};
     const uint8_t   setADCav      {7};
+
+    byte check = 0xFF;
 
 
     union

@@ -1,23 +1,31 @@
 /*
- * Программа для микроконтроллера Arduino Nano Every
- * Предназначение - управление работой сенсора на основе полевого транзистора.
- * автор - Парфенов Петр, qrspeter@gmail.com для Орловой Анны Олеговны (Университет ИТМО)
+ * Pprogram for Arduino Nano Every microcontroller
+ * Purpose: control of the operation of a sensor based on a field-effect transistor, 
+ * resistive sensors, and also measurement of IV characteristics.
+ * Author - Peter Parfenov, qrspeter@gmail.com for Orlova Anna (ITMO University)
+
+ * This work was supported by the Ministry of Science and Higher Education of the Russian Federation, 
+ * goszаdanie no.2019-1080.
+ *
+ * International Research and Education Centre for Physics of Nanostructures, 
+ * ITMO University, Saint Petersburg 197101, Russia
  * 
- * Принимает управляющие байты (operation codes) от USB порта для сброса и установки напряжения двух ЦАП MCP4725 (затвор и канал), 
- * а также настройки/запуска и опроса одного АЦП MCP3421(или MCP3424 - 
- * в этом случае можно добавлять еще АЦП с дописыванием кода и добавлением команд).
- * Последняя команда возвращает в порт результаты измерения при опросе АЦП (длиной 2 или 3 байта в зависимости от разрядности).
- * Программа не преобразует напряжение в отсчеты и обратно, все это вынесено в управляющую программу на ПК (для облегчения отладки)
- * Также не информирует о статусе преобразования и о успешности записи команд в периферийные устройства.
+ * Receives operation codes from USB port to reset and set voltage 
+ * of two MCP4725 DACs (gate and channel), 
+ * as well as setup/start and polling of one ADC MCP3421.
+ * Returns measurement results to the port when polling the ADC
+ * (2 or 3 bytes depending on the bit depth of the ADC conversion).
+ * The program does not convert voltage to DAC readings and back from ADC readings to voltage. 
+ * It receives and sends data in ADC and DAC format.
+ * It also does not check the  success of writing  commands to peripheral devices.
  * 
- * Требуется изменение констант смещения ЦАП.
+ * The DAC offset constants need to be changed.
  * 
- * Может еще не хватает функции "разбудить-усыпить", чтобы в обычное время опрос порта шел с задержкой в цикле 100 мс, а с приемом первого байта - без задержек. 
- * Но тогда надо знать сколко байтов будет принято
  * 
  * */
 
- // " ардуино шлет пакеты младшим байтом вперед, отсюда и преобразование 321 ->132"  https://ru.stackoverflow.com/questions/1237290/
+ // arduino sends packets with the least significant byte first, hence the conversionе 321 ->132
+ //  https://ru.stackoverflow.com/questions/1237290/
 
 
 
@@ -25,32 +33,33 @@
 
 const char model[] = "Current Sensor";
 const char version[] = "ver. 1.1";
-byte codename = 128;
 
-// адреса устройств
+// Device addresses
 const byte DAC_GATE_ADDRESS   = 0x60; // Troyka - 0x62
 const byte DAC_DRAIN_ADDRESS  = 0x61; // Troyka - 0x63
 const byte ADC_DRAIN_ADDRESS  = 0x68;
 
-const byte sleep_time[4]{ 5, 17, 67, 267 }; // 12bit = 1000/240 = 5, 14bit = 1000/60 = 17, 16bit = 1000/15 = 67, 18bit = 1000/3.75 = 267
+// 12bit = 1000/240 = 5ms, 14bit = 1000/60 = 17ms, 16bit = 1000/15 = 67ms, 18bit = 1000/3.75 = 267ms
+const byte conversion_time[4]{ 5, 17, 67, 267 }; 
 
 void(* resetFunc) (void) = 0;
 
 
-// переменная для режимов АЦП, влияет на длину возвращаемых данных. Прочие изменения не влияют и должны учитываться в управляющей программе на ПК.
+// ADC returns 2 bytes in 12 and 16 bit mode, and 3 bytes in 18-bit mode. 
 enum adc_bit_mode
 {
   bit18     = 0,
   bit12_16  = 1
 };
 
-// маска очищающая старший полубайт старшего байта, на всякий случай (там 12-битное значение, где игнорируются старшие 4, делаем на всякий случай, тк так там флаги)
+// mask clears the high nibble of the high byte, just in case 
+// (there is a 12-bit value, where the upper 4 are ignored, because there are flags)
 const byte dac_mask   = 0b00001111; // ? 010-Sets in Write mode? 0b01000000
 
-// стартовое состояние ЦАП
+// initial DAC state
 byte status_ADC_drain = 0b10001100;
 
-// маска для битов, отвечающих на разрядность преобразования
+// mask for bits that correspond to the conversion bit depth
 const byte ADC_mode_mask = 0b00001100;
 
 byte averaging{1};
@@ -60,8 +69,8 @@ byte averaging{1};
 const byte sensor_reset   = 0;
 const byte setDAC_Gate    = 1;
 const byte setDAC_Drain   = 2;
-const byte setADC         = 3; // а может и не нужен, если режим задавать в команде опроса АЦП. Хотя проще период считать на компе, снимая отладку с микроконтроллера
-const byte getADC         = 4; // а вот тут куча свободных бит для режима работы
+const byte setADC         = 3; 
+const byte getADC         = 4; 
 const byte setLaser_On    = 5;
 const byte setLaser_Off   = 6;
 const byte setADCav       = 7;
@@ -114,9 +123,10 @@ adc_bit_mode bit_mode;
 void Sensor_reset()
 {
 
-//   resetFunc(); //  NVIC_SystemReset(); // asm volatile (”jmp 0″); // void (softReset){ asm volatile (" jmp 0");
+//   resetFunc(); //  NVIC_SystemReset(); // asm volatile (”jmp 0″); 
+// void (softReset){ asm volatile (" jmp 0");
   
-   Wire.beginTransmission(0x00); // The general call addresses all devices on the bus using the I2C address 0.
+   Wire.beginTransmission(0x00); // The general call addresses all devices using the I2C address 0.
    Wire.write(0x06); 
    Wire.endTransmission();
 
@@ -132,11 +142,8 @@ void Sensor_reset()
    
    
    Wire.beginTransmission(ADC_DRAIN_ADDRESS);
-   Wire.write(ADC_mode_mask); // первый канал (00), единичная выборка (0), 18 бит (11), единичное усиление (00)
-   Wire.endTransmission();
-   
-   //Serial.write(codename); // codename
-   
+   Wire.write(ADC_mode_mask); // channel 1 (00), single poll (0), 18 bit (11), amplification=1 (00)
+   Wire.endTransmission();  
            
 }
 
@@ -146,7 +153,7 @@ void setup() {
 
 // ==============
   // TEST initialize digital pin LED_BUILTIN as an output.
-  pinMode(LED_BUILTIN, OUTPUT);  // это же то же самое?  pinMode(13, OUTPUT); // объявляем пин 13 как выход
+  pinMode(LED_BUILTIN, OUTPUT);  // pinMode(13, OUTPUT);
   
 // ==============
   // TEST wait for a second
@@ -159,10 +166,9 @@ void setup() {
   Serial.begin(9600);
   Wire.begin();
 
-  //Sensor_reset();
  // ADC setup
   Wire.beginTransmission(ADC_DRAIN_ADDRESS);// 
-  Wire.write(ADC_mode_mask); // Настройка в 12 бит - Wire.write(B10011)... 
+  Wire.write(ADC_mode_mask); // Set 12 bit - Wire.write(B10011)... 
   Wire.endTransmission();
 
 
@@ -199,27 +205,15 @@ void setup() {
 
 void loop() 
 {
-/*
-// ==============
-  // TEST wait for a second
-  digitalWrite(LED_BUILTIN, HIGH); 
-  delay(500);                        
-  digitalWrite(LED_BUILTIN, LOW);   
-  delay(500);                      
-// ==============
-  */
 
 	int first_lap_sign {1};
 
     if(Serial.available()) 
     {
-//      delay(7); // задержка тормозит получение данных при большой скорость выборки, а если убрать - то на 18бит начинаются странные данные, ну и помехи на других режимах. Тут 70 вроде минимум
-      // навернео потому что тут проверяется есть ли хоть один байт, а следом команды могут требовать от 1 до 3 байт.
-      // ввел ожидание получения следующих байтов в каждом пункте switch
 
       switch(Serial.read())
       {
-        // или через указатели http://mypractic.ru/urok-15-ukazateli-v-c-dlya-arduino-preobrazovanie-raznyx-tipov-dannyx-v-bajty.html 
+        // or using pointers http://mypractic.ru/urok-15-ukazateli-v-c-dlya-arduino-preobrazovanie-raznyx-tipov-dannyx-v-bajty.html 
 	      case sensor_reset:
             Sensor_reset();
 
@@ -228,7 +222,6 @@ void loop()
         case setDAC_Gate:
         while(Serial.available() < 2){ delay(2); }
         // get 12 bit
-     //   dac_voltage.voltage = Serial.read();
         voltage.volt_1 = Serial.read();
         voltage.volt_0 = Serial.read();
         
@@ -261,7 +254,8 @@ void loop()
         while(Serial.available() < 1){ delay(2); }
         status_ADC_drain = Serial.read();
         Wire.beginTransmission(ADC_DRAIN_ADDRESS);
-        Wire.write(status_ADC_drain);  //  12-14-16-18 бит это b10000000-b10000100-b10001000-b10001100 (x80/x84/x88/x8C)
+        //  12-14-16-18 bit are b10000000-b10000100-b10001000-b10001100 (x80/x84/x88/x8C)
+        Wire.write(status_ADC_drain);  
         Wire.endTransmission();
 
    //     status_byte = 1;           
@@ -322,6 +316,8 @@ void loop()
         }        
         else
         {
+          break;
+          /*
           byte mode = adc_status >> 2;
           uint32_t accumulation{0};
  
@@ -337,7 +333,7 @@ void loop()
 
             Wire.write(status_ADC_drain);  //  12-14-16-18 бит это b10000000-b10000100-b10001000-b10001100 (x80/x84/x88/x8C)
 
-            delay(sleep_time[mode]);            
+            delay(conversion_time[mode]);            
 
             Wire.beginTransmission(ADC_DRAIN_ADDRESS);
       
@@ -402,6 +398,7 @@ void loop()
 
             Serial.write((byte*)&adc.meas_1, sizeof(byte));
             Serial.write((byte*)&adc.meas_0, sizeof(byte));
+          */
         }
 
 		    Wire.endTransmission();
@@ -433,7 +430,9 @@ void loop()
         break;
 
   //===============================================================
-  //      default:
+        default:
+          byte error_byte = 0xFF;
+          Serial.write(error_byte);
         
       }
 
