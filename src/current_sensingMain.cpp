@@ -22,6 +22,8 @@
 #include <wx/filename.h>
 #include <wx/progdlg.h> // https://docs.wxwidgets.org/trunk/classwx_progress_dialog.html или https://flylib.com/books/en/3.138.1.74/1/
 
+//#define _GLIBCXX_USE_NANOSLEEP
+
 #include <vector>
 #include <chrono>
 #include <thread>

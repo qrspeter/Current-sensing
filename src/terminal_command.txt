@@ -1,3 +1,5 @@
+g++.exe -LC:\wxwidgets\lib\gcc_dll -o bin\Debug\current_sensing.exe obj\Debug\current_sensingApp.o obj\Debug\current_sensingMain.o obj\Debug\mathplot\mathplot.o obj\Debug\mathplot\MathPlotConfig.o obj\Debug\sensor_fet\sensor_fet.o  obj\Debug\resource.res -mthreads  -lwxmsw31u -mwindows
+
 -------------- Build: Debug in current_sensing (compiler: GNU GCC Compiler)---------------
 
 g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE -Wall -g -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu -c E:\programming\FET_sensor\Current-sensing\src\current_sensingApp.cpp -o obj\Debug\current_sensingApp.o
@@ -26,3 +28,100 @@ g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE 
 g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE -Wall -O2 -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu -c E:\programming\FET_sensor\Current-sensing\src\current_sensingMain.cpp -o obj\Release\current_sensingMain.o
 g++.exe -pipe -mthreads -D__GNUWIN32__ -D__WXMSW__ -DWXUSINGDLL -DwxUSE_UNICODE -Wall -O2 -IC:\wxwidgets\include -IC:\wxwidgets\lib\gcc_dll\mswu -c E:\programming\FET_sensor\Current-sensing\src\sensor_fet\sensor_fet.cpp -o obj\Release\sensor_fet\sensor_fet.o
 g++.exe -LC:\wxwidgets\lib\gcc_dll -o bin\Release\current_sensing.exe obj\Release\current_sensingApp.o obj\Release\current_sensingMain.o obj\Release\mathplot\mathplot.o obj\Release\mathplot\MathPlotConfig.o obj\Release\sensor_fet\sensor_fet.o  obj\Release\resource.res -s -mthreads  -lwxmsw31u -mwindows
+
+
+===============
+
+
+https://sourceforge.net/p/cbp2make/wiki/Home/
+
+About
+
+'''cbp2make''' is a stand-alone build tool that allows you to generate makefile(s) for GNU Make out of Code::Blocks IDE project or workspace file. (See also [http://forums.codeblocks.org/index.php/topic,13675.0.html])
+Usage
+Create makefile for a single project or workspace
+
+Let's assume you have a project "my_project.cbp" and you need a makefile for this project. In this simplest case all you have to do is:
+
+cbp2make -in my_project.cbp
+
+Same thing applies to workspaces.
+
+cbp2make -in my_projects.workspace
+Create makefile with another filename
+
+By default, '''cbp2make''' will append ".mak" extension to the project name to compose a filename for makefile.
+If you want to change that, use following command:
+
+cbp2make -in my_project.cbp -out Makefile
+Create makefile for another platform
+
+If you are working in GNU/Linux and you want to generate a makefile for Windows or the other way around, you can specify one or more platforms for which you need makefiles.
+
+
+cbp2make -in my_project.cbp -windows
+
+cbp2make -in my_project.cbp -unix
+
+cbp2make -in my_project.cbp -unix -windows -mac
+
+cbp2make -in my_project.cbp --all-os
+
+'''cbp2make''' will append ".unix" or ".windows" or ".mac" suffix to makefile name for each platform respectively.
+Create makefile for multiple projects or workspaces
+
+If you have more than one independent project or workspace, you can process them at once, but you will need a text file containing the list of projects, e.g., ''projects.lst'', with one project filename per line.
+
+    my_project.cbp
+    my_other_project.cbp 
+
+And then you can process them using command:
+
+cbp2make -list -in projects.lst
+Configuration
+
+Some installation-specific or project-specific options, primarily toolchain settings, can be saved to a configuration file. By default (since rev.110), cbp2make does not save any settings to a configuration file unless the user explicitly specifies the "--config" option. A configuration file can be either global (stored in user profile / home directory) or local (stored in current directory).
+
+Please, keep in mind that since cbp2make is in early stage of development, an old configuration file may become incompatible with new tool version and it may be necessary to update it manually or initialize a new one.
+Initialization
+
+cbp2make --config options --global
+
+cbp2make --config options --local
+Later use
+
+When cbp2make is invoked, first it tries to load a local configuration file. If a local configuration is missing, next attempt will be to load a global one. If this attempt is not successful either, the default built-in configuration is used. Configuration lookup order can be overridden with "--local" or "--global" command line options. If one of options is supplied to cbp2make, non-specified configuration is not picked up even if the specified one is missing and non-specified do exists.
+Default lookup order
+
+cbp2make -in project.cbp -out Makefile
+Explicitly specified configuration
+
+cbp2make --local -in project.cbp -out Makefile
+
+cbp2make --global -in project.cbp -out Makefile
+Command line syntax
+
+
+Generate makefile:
+cbp2make -in <project_file> [-cfg <configuration>] [-out <makefile>]
+[-unix] [-windows] [-mac] [--all-os] [-targets "<target1>[,<target2>[, ...]]"]
+[--flat-objects] [--flat-objpath] [--wrap-objects] [--wrap-options]
+[--with-deps] [--keep-objdir] [--keep-outdir] [--target-case keep|lower|upper]
+cbp2make -list -in <project_file_list> [-cfg <configuration>]
+[-unix] [-windows] [-mac] [--all-os] [-targets "<target1>[,<target2>[, ...]]"]
+[--flat-objects] [--flat-objpath] [--wrap-objects] [--wrap-options]
+[--with-deps] [--keep-objdir] [--keep-outdir] [--target-case keep|lower|upper]
+
+
+
+
+( mingw32-make -f Makefile.win
+
+does not work)
+
+
+===================
+
+another option:
+https://wiki.codeblocks.org/index.php/Code::Blocks_and_Makefiles
+
