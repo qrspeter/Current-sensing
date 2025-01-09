@@ -398,14 +398,15 @@ void current_sensingFrame::OnSaveAs(wxCommandEvent &event)
 
 
 		std::ofstream fsave;
-		fsave.open(path, std::ios::out); // (path); //  | ios::binary
+
+		fsave.open(path.mb_str(), std::ios::out); // (path); //  | ios::binary
 
         if (fsave.is_open()) // если файл открыт
         {
 
             if(T_data.size()) // Transient data to save
             {
-                fsave << "#Time (sec), Current (A), Voltage (V)" << std::endl; //
+                fsave << "#Time (sec), Voltage (V)" << std::endl; //
                 for(unsigned int i = 0; i < I_data.size(); ++i) //
                 {
                     fsave << T_data[i] << "," << I_data[i] / 1000.0 << ","  << V_data[i] << std::endl;
@@ -447,7 +448,10 @@ void current_sensingFrame::OnOpen(wxCommandEvent &event)
         return;     // the user changed idea...
 
     std::ifstream fopen; // std::getline is designed for use with input stream classes (std::basic_istream) so you should be using the std::ifstream class instead of std::ofstream
-    fopen.open(openFileDialog->GetPath(), std::ios::in);
+
+	wxString path = openFileDialog->GetPath();
+
+    fopen.open(path.mb_str(), std::ios::in);
 
     if (fopen.is_open())
     {
@@ -1151,7 +1155,7 @@ void current_sensingFrame::Transient_start(wxCommandEvent &event)
 
     auto start = std::chrono::steady_clock::now();
 
-    auto target_time = start;
+    //auto target_time = start;
     sensor.Laser(SENSOR_FET::LASER_OFF);
 
     auto period = trans_pulse_period -> GetValue();
@@ -1159,9 +1163,13 @@ void current_sensingFrame::Transient_start(wxCommandEvent &event)
     auto delay = trans_pulse_delay -> GetValue();
     do
     {
+		//std::this_thread::sleep_for(std::chrono::seconds(trans_time_step -> GetValue()));
+		std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>((trans_time_step -> GetValue()) * 1000)));
+/*
         std::this_thread::sleep_until(target_time);
         target_time = target_time + std::chrono::milliseconds(static_cast<int>((trans_time_step -> GetValue()) * 1000));
-        auto now = std::chrono::steady_clock::now();
+*/
+		auto now = std::chrono::steady_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() / 1000.0;
 
         double working_time = static_cast<double>(duration) - delay;
@@ -1238,16 +1246,16 @@ void current_sensingFrame::Transient_stop(wxCommandEvent &event)
 std::vector<std::string> current_sensingFrame::SerialList()
 {
     std::vector<std::string> serialList;
-    std::string COMName("COM"), queryName("");
+    std::string comname("COM"), queryName("");
     char bufferTragetPath[5000];
     long path_size{0};
 
     //test each COM name to get the one used by the system and get his description name
     for (int i{1}; i < 24; i++)
     {
-        queryName = COMName + std::to_string(i);
+        queryName = comname + std::to_string(i);
 
-        //Query the path of the COMName
+        //Query the path of the comname
         path_size = QueryDosDeviceA(queryName.c_str(), bufferTragetPath, 5000);
         //std::cout << std::endl << "Path for " << queryName << ":" << path_size << "   " << queryName;
         if (path_size != 0) {

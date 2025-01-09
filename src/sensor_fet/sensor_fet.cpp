@@ -60,9 +60,9 @@ int SENSOR_FET::Open(std::string port = "COM3")
 
 	if(hSerial == INVALID_HANDLE_VALUE) // проверка выделения порта. NULL for 32-bit Win and INVALID_HANDLE_VALUE for 64bit
 	{
-	    if(GetLastError() == ERROR_FILE_NOT_FOUND)
-        MessageBox(NULL, "COM port is not found", "Error", MB_OK);
-        else
+		if(GetLastError() == ERROR_FILE_NOT_FOUND)
+		MessageBox(NULL, "COM port is not found", "Error", MB_OK);
+		else
 		MessageBox(NULL, "Error Open COM", "Error", MB_OK);
 		return(0);
 	}
@@ -132,10 +132,15 @@ int SENSOR_FET::Open(std::string port = "COM3")
 
 	if(!Check())
     {
-        MessageBox(NULL, "Wrong answer, probably wrong COM device", "Error", MB_OK);
-        CloseHandle(hSerial);
-		return(0);
+        Sleep(1000); // need a time before check... sometimes....
 
+        if(!Check())
+        {
+            MessageBox(NULL, "Wrong answer, probably wrong COM device", "Error", MB_OK);
+            CloseHandle(hSerial);
+            return(0);
+
+        }
     }
 
 	Reset();
@@ -170,8 +175,9 @@ int SENSOR_FET::Reset()
 
 int SENSOR_FET::Check()
 {
-   unsigned char answer{0};
+   char answer{0};
    WriteFile(hSerial, &default_answer, sizeof(default_answer), &bc, NULL);
+   //Sleep(3000);
    ReadFile(hSerial, &answer, 1, &bc, NULL);
 
    if(answer == default_answer)
@@ -347,7 +353,9 @@ double SENSOR_FET::Get_voltage()
 // both corrections equal 0 for 18 bit and x1 gain.  But smth is wrong exactly with 0.
 // may be better without static_cast and 0 power.
     double adc_res_correction = std::pow(2.0, double(( 3.0 - static_cast<int>(current_res)) * 2.0)); // reduction of  ADC counts for 12-14-16 bit (to 18 bit)
-    double adc_gain_correction = std::pow(2.0, double(static_cast<int>(current_gain))); // embedded ADC gain - 1-2-4-8.
+
+    // In a future:
+    //double adc_gain_correction = std::pow(2.0, double(static_cast<int>(current_gain))); // embedded ADC gain - 1-2-4-8.
 
 
 

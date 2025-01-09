@@ -144,7 +144,7 @@ private:
     const uint8_t   setLaser_Off  {6};
     const uint8_t   setADCav      {7};
 
-    unsigned char default_answer = 0xFF;
+    const char default_answer = 0xFF;
 
 
     union
