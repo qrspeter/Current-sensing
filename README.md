@@ -1,11 +1,18 @@
 # Current sensing for FET-based sensor (IV-measurement, current logging)
 
-For a current-sensing project Using Codeblocks-20.03 / MinGW-W64-builds-4.3.5 (GCC 8.1.0) / wxWidgets-3.1.5 / wxMathPlot 
 
-Also compiled with makefile. Tested both in GCC 8.1.0 and 13.2.0.
+./embedded_arduino
 
+	Code for Arduino microcontroller.
+	
+./scheme
 
-Control program current_sensing.exe needs wxmsw315u_gcc_custom.dll. 
+	Electrical scheme of the device
+	
+./src
+
+	Source code for a control program. Made using Codeblocks-20.03 / MinGW-W64-builds-4.3.5 (GCC 8.1.0) / wxWidgets-3.1.5 / wxMathPlot. Tested both in GCC 8.1.0 and 13.2.0. Also can be compiled with the makefile.
+	Control program current_sensing.exe needs wxmsw315u_gcc_custom.dll. 
 
 
 ![Interface](interface.png)
